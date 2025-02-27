@@ -263,14 +263,14 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TANGGAL</th>
                                     @if(auth()->user()->hasRole('admin'))
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Karyawan</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KARYAWAN</th>
                                     @endif
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Project</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KODE PROJECT</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOKASI</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">WAKTU</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AKSI</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -292,12 +292,16 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {{ $report->start_time }} - {{ $report->end_time }}
+                                            @if($report->is_overtime)
+                                                <span class="text-xs text-yellow-600">(Lembur)</span>
+                                            @endif
                                             @if($report->is_overnight)
-                                                <span class="text-xs text-indigo-600">(Lembur)</span>
+                                                <span class="text-xs text-purple-600">(Overnight)</span>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <a href="{{ route('reports.show', $report) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Detail</a>
+                                            <a href="{{ route('reports.export', $report) }}" class="text-green-600 hover:text-green-900 mr-3">Export</a>
                                             @can('update', $report)
                                                 <a href="{{ route('reports.edit', $report) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">Edit</a>
                                             @endcan

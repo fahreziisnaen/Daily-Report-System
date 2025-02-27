@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ReportController;
 use App\Models\User;
@@ -25,9 +24,6 @@ Route::middleware('auth')->group(function () {
 
     // Admin routes
     Route::group(['middleware' => ['auth', 'can:admin'], 'prefix' => 'admin', 'as' => 'admin.'], function () {
-        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
-        Route::post('/settings/test-ldap', [SettingsController::class, 'testLdapConnection'])->name('settings.test-ldap');
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::put('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update-role');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
@@ -43,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/{report}/edit', [ReportController::class, 'edit'])->name('reports.edit');
     Route::put('/reports/{report}', [ReportController::class, 'update'])->name('reports.update');
     Route::delete('/reports/{report}', [ReportController::class, 'destroy'])->name('reports.destroy');
+    Route::get('/reports/{report}/export', [ReportController::class, 'export'])->name('reports.export');
 
     // API routes for search
     Route::middleware('auth')->group(function () {

@@ -153,8 +153,6 @@ return [
         /*
          * Package Service Providers...
          */
-        LdapRecord\Laravel\LdapServiceProvider::class,
-        LdapRecord\Laravel\LdapAuthServiceProvider::class,
         Spatie\Permission\PermissionServiceProvider::class,
 
         /*

@@ -47,6 +47,33 @@
                                     @enderror
                                 </div>
 
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Kerja Saat</label>
+                                    <div class="mt-2 space-x-4">
+                                        <label class="inline-flex items-center">
+                                            <input type="radio" 
+                                                name="work_day_type" 
+                                                value="Hari Kerja" 
+                                                class="form-radio text-indigo-600"
+                                                {{ old('work_day_type', $report->work_day_type) === 'Hari Kerja' ? 'checked' : '' }}
+                                                required>
+                                            <span class="ml-2">Hari Kerja</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="radio" 
+                                                name="work_day_type" 
+                                                value="Hari Libur" 
+                                                class="form-radio text-indigo-600"
+                                                {{ old('work_day_type', $report->work_day_type) === 'Hari Libur' ? 'checked' : '' }}
+                                                required>
+                                            <span class="ml-2">Hari Libur</span>
+                                        </label>
+                                    </div>
+                                    @error('work_day_type')
+                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label for="start_time" class="block text-sm font-medium text-gray-700">Waktu Mulai</label>

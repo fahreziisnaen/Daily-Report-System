@@ -47,6 +47,12 @@
             @endif
         </div>
 
+        <div>
+            <x-input-label for="homebase" :value="__('Homebase')" />
+            <x-text-input id="homebase" name="homebase" type="text" class="mt-1 block w-full" :value="old('homebase', $user->homebase)" required />
+            <x-input-error class="mt-2" :messages="$errors->get('homebase')" />
+        </div>
+
         <!-- Profile Picture Input -->
         <div>
             <x-input-label for="avatar" :value="__('Profile Picture')" />
