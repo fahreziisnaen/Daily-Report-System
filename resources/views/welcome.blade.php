@@ -98,7 +98,7 @@
                                             Setiap laporan yang kita buat adalah langkah menuju kesempurnaan project.
                                             <span class="block mt-2 font-semibold text-yellow-300">
                                                 "Dokumentasi Rapi, Project Terkawal, Hasil Optimal!"
-                                    </span>
+                            </span>
                                         </p>
                                         
                                         <div class="flex justify-center space-x-2 text-xl">
@@ -117,8 +117,8 @@
                                                 Masuk Sekarang
                                                 <svg class="ml-2 -mr-1 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                                        </svg>
-                                    </a>
+                                    </svg>
+                                </a>
                                         </div>
                                     @endguest
 

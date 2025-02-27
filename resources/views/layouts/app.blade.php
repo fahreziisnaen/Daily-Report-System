@@ -22,8 +22,8 @@
         <style>[x-cloak] { display: none !important; }</style>
         @stack('scripts')
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <body class="font-sans antialiased min-h-screen flex flex-col">
+        <div class="flex-grow bg-gray-100 dark:bg-gray-900">
             @include('layouts.navigation')
 
             <!-- Page Heading -->
@@ -39,18 +39,18 @@
             <main>
                 {{ $slot }}
             </main>
-
-            <!-- Footer -->
-            <footer class="bg-white dark:bg-gray-800 shadow mt-auto py-4">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <span class="text-sm text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2">
-                        © {{ date('Y') }} PT. Internet Pratama Indonesia. All rights reserved. Developed by 
-                        <a href="https://fahrezifauzan.vercel.app/" target="_blank" class="text-blue-500 hover:underline flex items-center gap-1">    
-                            <img src="{{ asset('images/frz_sign.png') }}" alt="FRZ Logo" class="h-4 w-auto"> 
-                        </a>
-                    </span>
-                </div>
-            </footer>
         </div>
+
+        <!-- Footer -->
+        <footer class="bg-white dark:bg-gray-800 shadow py-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <span class="text-sm text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2">
+                    © {{ date('Y') }} PT. Internet Pratama Indonesia. All rights reserved. Developed by 
+                    <a href="https://fahrezifauzan.vercel.app/" target="_blank" class="text-blue-500 hover:underline flex items-center gap-1">    
+                        <img src="{{ asset('images/frz_sign.png') }}" alt="FRZ Logo" class="h-4 w-auto"> 
+                    </a>
+                </span>
+            </div>
+        </footer>
     </body>
 </html>

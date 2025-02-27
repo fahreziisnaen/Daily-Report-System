@@ -29,9 +29,10 @@ use App\Models\Settings;
                                 <input type="checkbox" 
                                        name="ldap_enabled" 
                                        id="ldap_enabled"
-                                       value="1" 
+                                       value="true"
                                        {{ $ldapEnabled ? 'checked' : '' }}
                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                <input type="hidden" name="ldap_enabled_submitted" value="1">
                                 <span class="ml-2 text-gray-700">Enable LDAP Authentication</span>
                             </label>
                         </div>

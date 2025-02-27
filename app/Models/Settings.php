@@ -17,12 +17,22 @@ class Settings extends Model
     public static function get($key, $default = null)
     {
         $setting = static::where('key', $key)->first();
-        return $setting ? $setting->value : $default;
+        $value = $setting ? $setting->value : $default;
+        
+        // Handle boolean values
+        if ($value === 'true') return true;
+        if ($value === 'false') return false;
+        return $value;
     }
 
     // Helper method untuk set/update value
     public static function set($key, $value)
     {
+        // Ensure boolean values are stored consistently
+        if (is_bool($value)) {
+            $value = $value ? 'true' : 'false';
+        }
+
         $setting = static::where('key', $key)->first();
         
         if ($setting) {

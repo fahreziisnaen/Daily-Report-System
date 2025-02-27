@@ -32,25 +32,45 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
+        // Debug log
+        \Log::info('LDAP Settings Update Request:', [
+            'ldap_enabled_raw' => $request->input('ldap_enabled'),
+            'has_ldap_enabled' => $request->has('ldap_enabled'),
+            'all_data' => $request->all()
+        ]);
+        
+        // Explicitly handle checkbox value
+        $ldapEnabled = $request->boolean('ldap_enabled') ? 'true' : 'false';
+
         $validated = $request->validate([
-            'ldap_enabled' => 'boolean',
-            'ldap_host' => 'required_if:ldap_enabled,1',
-            'ldap_port' => 'required_if:ldap_enabled,1|numeric',
-            'ldap_base_dn' => 'required_if:ldap_enabled,1',
-            'ldap_username' => 'required_if:ldap_enabled,1',
-            'ldap_password' => 'required_if:ldap_enabled,1',
+            'company_name' => 'required|string|max:255',
+            'company_email' => 'required|email',
+            'ldap_host' => 'required_if:ldap_enabled,true',
+            'ldap_port' => 'required_if:ldap_enabled,true|numeric|nullable',
+            'ldap_base_dn' => 'required_if:ldap_enabled,true',
+            'ldap_username' => 'required_if:ldap_enabled,true',
+            'ldap_password' => 'required_if:ldap_enabled,true',
         ]);
 
-        // Convert boolean to string for storage
-        $validated['ldap_enabled'] = $validated['ldap_enabled'] ? 'true' : 'false';
+        // Save LDAP enabled status first
+        Settings::set('ldap_enabled', $ldapEnabled);
+        
+        // Debug log after save
+        \Log::info('LDAP Setting Saved:', [
+            'saved_value' => Settings::get('ldap_enabled')
+        ]);
 
+        // Save other settings
         foreach ($validated as $key => $value) {
-            Settings::set($key, $value);
+            if ($value !== null && $key !== 'ldap_enabled') {
+                Settings::set($key, $value);
+            }
         }
 
         Cache::forget('settings');
 
-        return redirect()->back()->with('success', 'Settings updated successfully');
+        return redirect()->route('admin.settings.index')
+            ->with('success', 'Settings updated successfully');
     }
 
     public function testLdapConnection(Request $request)
