@@ -1,0 +1,66 @@
+<?php
+
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\ReportController;
+use App\Models\User;
+use App\Models\Report;
+use Illuminate\Http\Request;
+use App\Http\Controllers\DashboardController;
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Admin routes
+    Route::group(['middleware' => ['auth', 'can:admin'], 'prefix' => 'admin', 'as' => 'admin.'], function () {
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::post('/settings/test-ldap', [SettingsController::class, 'testLdapConnection'])->name('settings.test-ldap');
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::put('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update-role');
+    });
+
+    // Employee routes
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/create', [ReportController::class, 'create'])->name('reports.create');
+    Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+    Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+    Route::get('/reports/{report}/edit', [ReportController::class, 'edit'])->name('reports.edit');
+    Route::put('/reports/{report}', [ReportController::class, 'update'])->name('reports.update');
+    Route::delete('/reports/{report}', [ReportController::class, 'destroy'])->name('reports.destroy');
+
+    // API routes for search
+    Route::middleware('auth')->group(function () {
+        Route::get('/api/search-employees', function (Request $request) {
+            return User::role('employee')
+                ->where('name', 'LIKE', '%' . $request->q . '%')
+                ->pluck('name');
+        });
+
+        Route::get('/api/search-locations', function (Request $request) {
+            return Report::where('location', 'LIKE', '%' . $request->q . '%')
+                ->distinct()
+                ->pluck('location');
+        });
+
+        Route::get('/api/search-projects', function (Request $request) {
+            return Report::where('project_code', 'LIKE', '%' . $request->q . '%')
+                ->distinct()
+                ->pluck('project_code');
+        });
+    });
+});
+
+require __DIR__.'/auth.php';
