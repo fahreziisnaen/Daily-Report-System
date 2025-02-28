@@ -229,8 +229,16 @@
                                             <div class="flex justify-end gap-2">
                                                 <a href="{{ route('reports.show', $report) }}" 
                                                     class="text-indigo-600 hover:text-indigo-900">Detail</a>
-                                                <a href="{{ route('reports.export', $report) }}" 
-                                                    class="text-green-600 hover:text-green-900">Export</a>
+                                                @if($report->is_overtime)
+                                                    <a href="{{ route('reports.export', $report) }}" 
+                                                        class="text-green-600 hover:text-green-900"
+                                                        title="Download Lembur">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                        </svg>
+                                                    </a>
+                                                @endif
                                                 @can('update', $report)
                                                     <a href="{{ route('reports.edit', $report) }}" 
                                                         class="text-yellow-600 hover:text-yellow-900">Edit</a>
@@ -373,13 +381,17 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                     </svg>
                                 </a>
-                                <a href="{{ route('reports.export', $report) }}" 
-                                    class="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-600 rounded-md text-sm font-medium hover:bg-green-100">
-                                    <span>Export</span>
-                                    <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                    </svg>
-                                </a>
+                                @if($report->is_overtime)
+                                    <a href="{{ route('reports.export', $report) }}" 
+                                        class="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-600 rounded-md text-sm font-medium hover:bg-green-100"
+                                        title="Download Lembur">
+                                        <span>Lembur</span>
+                                        <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                        </svg>
+                                    </a>
+                                @endif
                                 @can('update', $report)
                                     <a href="{{ route('reports.edit', $report) }}" 
                                         class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-600 rounded-md text-sm font-medium hover:bg-yellow-100">

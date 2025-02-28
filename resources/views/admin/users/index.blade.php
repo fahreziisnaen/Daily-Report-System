@@ -83,21 +83,105 @@
                             </td>
                             <td class="hidden md:table-cell px-3 py-2 text-sm">{{ $user->homebase ?: '-' }}</td>
                             <td class="px-3 py-2">
-                                <form action="{{ route('admin.users.update-role', $user) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('PUT')
-                                    <select name="role" onchange="this.form.submit()" 
-                                        class="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                        @foreach($roles as $role)
-                                            <option value="{{ $role->name }}" {{ $user->hasRole($role->name) ? 'selected' : '' }}>
-                                                {{ ucfirst($role->name) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </form>
+                                <div x-data="{ 
+                                    showConfirmation: false,
+                                    currentRole: '{{ $user->roles->first()->name }}',
+                                    newRole: '{{ $user->roles->first()->name }}',
+                                    
+                                    updateRole() {
+                                        if (this.newRole === 'admin' && this.currentRole !== 'admin') {
+                                            this.showConfirmation = true;
+                                        } else {
+                                            this.$refs.form.submit();
+                                        }
+                                    }
+                                }">
+                                    <form x-ref="form" action="{{ route('admin.users.update-role', $user) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('PUT')
+                                        <select name="role" 
+                                            x-model="newRole"
+                                            @change="updateRole()"
+                                            class="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                            @foreach($roles as $role)
+                                                <option value="{{ $role->name }}" {{ $user->hasRole($role->name) ? 'selected' : '' }}>
+                                                    {{ ucfirst($role->name) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </form>
+
+                                    <!-- Modal Konfirmasi -->
+                                    <template x-teleport="body">
+                                        <div x-show="showConfirmation" 
+                                            class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center"
+                                            x-transition:enter="transition ease-out duration-300"
+                                            x-transition:enter-start="opacity-0"
+                                            x-transition:enter-end="opacity-100"
+                                            x-transition:leave="transition ease-in duration-200"
+                                            x-transition:leave-start="opacity-100"
+                                            x-transition:leave-end="opacity-0">
+                                            
+                                            <div x-show="showConfirmation"
+                                                @click.outside="showConfirmation = false; newRole = currentRole"
+                                                x-transition:enter="transition ease-out duration-300"
+                                                x-transition:enter-start="opacity-0 transform scale-90"
+                                                x-transition:enter-end="opacity-100 transform scale-100"
+                                                x-transition:leave="transition ease-in duration-200"
+                                                x-transition:leave-start="opacity-100 transform scale-100"
+                                                x-transition:leave-end="opacity-0 transform scale-90"
+                                                class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                                                
+                                                <!-- Modal Header -->
+                                                <div class="p-4 border-b">
+                                                    <h3 class="text-lg font-medium text-gray-900">Konfirmasi Perubahan Role</h3>
+                                                </div>
+
+                                                <!-- Modal Body -->
+                                                <div class="p-4">
+                                                    <div class="flex items-start mb-4">
+                                                        <div class="flex-shrink-0 bg-yellow-100 rounded-full p-2 mr-3">
+                                                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                            </svg>
+                                                        </div>
+                                                        <p class="text-gray-600">Apakah Anda yakin ingin mengubah role user ini menjadi Admin?</p>
+                                                    </div>
+                                                    <div class="text-sm text-gray-500 bg-gray-50 rounded p-3">
+                                                        <p>User: {{ $user->name }}</p>
+                                                        <p class="mt-1">User dengan role Admin memiliki akses penuh ke semua fitur sistem.</p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Modal Footer -->
+                                                <div class="p-4 border-t flex justify-end space-x-3">
+                                                    <button type="button" 
+                                                        @click="showConfirmation = false; newRole = currentRole"
+                                                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
+                                                        Batal
+                                                    </button>
+                                                    <button type="button"
+                                                        @click="showConfirmation = false; $refs.form.submit()"
+                                                        class="px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700">
+                                                        Konfirmasi
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
                             </td>
                             <td class="px-3 py-2 text-right">
                                 <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('admin.users.edit', $user) }}"
+                                        class="text-blue-600 hover:text-blue-900"
+                                        title="Edit User">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </a>
                                     <button type="button"
                                         x-data=""
                                         x-on:click="$dispatch('open-modal', 'reset-password-{{$user->id}}')"
