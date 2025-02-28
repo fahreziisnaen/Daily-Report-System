@@ -36,21 +36,46 @@
                             </div>
 
                             <!-- Lokasi -->
-                            <div class="mb-4">
+                            <div class="mb-4" x-data="{ 
+                                locationType: '{{ $report->location === auth()->user()->homebase ? 'homebase' : 'dinas' }}'
+                            }">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Lokasi</label>
-                                <div class="grid grid-cols-2 gap-4">
+                                <div class="grid grid-cols-2 gap-4 mb-3">
                                     <label class="flex items-center space-x-2 p-2 bg-white rounded-md border border-gray-200">
-                                        <input type="radio" name="location" value="{{ auth()->user()->homebase }}" 
-                                            class="w-5 h-5 text-indigo-600"
-                                            {{ old('location', $report->location) === auth()->user()->homebase ? 'checked' : '' }}>
+                                        <input type="radio" 
+                                            name="location_type" 
+                                            value="homebase" 
+                                            x-model="locationType"
+                                            class="w-5 h-5 text-indigo-600">
                                         <span class="text-sm">Homebase</span>
                                     </label>
                                     <label class="flex items-center space-x-2 p-2 bg-white rounded-md border border-gray-200">
-                                        <input type="radio" name="location" value="Lokasi Dinas" 
-                                            class="w-5 h-5 text-indigo-600"
-                                            {{ old('location', $report->location) === 'Lokasi Dinas' ? 'checked' : '' }}>
+                                        <input type="radio" 
+                                            name="location_type" 
+                                            value="dinas" 
+                                            x-model="locationType"
+                                            class="w-5 h-5 text-indigo-600">
                                         <span class="text-sm">Lokasi Dinas</span>
                                     </label>
+                                </div>
+                                
+                                <!-- Hidden input untuk homebase -->
+                                <input type="hidden" 
+                                    name="location" 
+                                    x-bind:value="locationType === 'homebase' ? '{{ auth()->user()->homebase }}' : ''">
+                                
+                                <!-- Input lokasi dinas yang muncul saat pilih dinas -->
+                                <div x-show="locationType === 'dinas'" 
+                                    x-transition:enter="transition ease-out duration-300"
+                                    x-transition:enter-start="opacity-0 transform scale-95"
+                                    x-transition:enter-end="opacity-100 transform scale-100">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Detail Lokasi Dinas</label>
+                                    <input type="text" 
+                                        x-bind:name="locationType === 'dinas' ? 'location' : ''"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
+                                        placeholder="Masukkan lokasi dinas"
+                                        value="{{ $report->location !== auth()->user()->homebase ? $report->location : '' }}"
+                                        x-bind:required="locationType === 'dinas'">
                                 </div>
                             </div>
 
