@@ -12,22 +12,6 @@ class DatabaseSeeder extends Seeder
     {
         // Add default settings
         DB::table('settings')->insert([
-            [
-                'key' => 'auth_mode',
-                'value' => 'local',
-                'group' => 'authentication',
-                'description' => 'Authentication mode (local/ldap)',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'key' => 'ldap_enabled',
-                'value' => 'false',
-                'group' => 'authentication',
-                'description' => 'Enable/disable LDAP authentication',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
         ]);
 
         // Create admin user
@@ -35,6 +19,7 @@ class DatabaseSeeder extends Seeder
             DB::table('users')->insert([
                 'name' => 'Admin',
                 'email' => 'admin@example.com',
+                'homebase' => 'Jakarta',
                 'password' => Hash::make('password'),
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -46,6 +31,7 @@ class DatabaseSeeder extends Seeder
             DB::table('users')->insert([
                 'name' => 'Employee',
                 'email' => 'employee@example.com',
+                'homebase' => 'Bandung',
                 'password' => Hash::make('password'),
                 'created_at' => now(),
                 'updated_at' => now(),

@@ -5,6 +5,10 @@
                 {{ __('Detail Laporan') }}
             </h2>
             <div class="flex space-x-2">
+                <a href="{{ route('reports.export', $report) }}" 
+                    class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700">
+                    {{ __('Export') }}
+                </a>
                 @can('update', $report)
                     <a href="{{ route('reports.edit', $report) }}" 
                         class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700">
@@ -35,30 +39,49 @@
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Pekerjaan</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <dt class="text-sm font-medium text-gray-500">Tanggal</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $report->report_date->format('d/m/Y') }}</dd>
+                                <label class="block text-sm font-medium text-gray-700">Tanggal</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $report->report_date->format('d/m/Y') }}</p>
                             </div>
                             
                             <div>
-                                <dt class="text-sm font-medium text-gray-500">Kode Project</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $report->project_code }}</dd>
+                                <label class="block text-sm font-medium text-gray-700">Kode Project</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $report->project_code }}</p>
                             </div>
 
                             <div>
-                                <dt class="text-sm font-medium text-gray-500">Lokasi</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $report->location }}</dd>
+                                <label class="block text-sm font-medium text-gray-700">Lokasi</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $report->location }}</p>
                             </div>
 
                             <div>
-                                <dt class="text-sm font-medium text-gray-500">Waktu</dt>
-                                <dd class="mt-1 text-sm text-gray-900">
-                                    {{ $report->start_time }} - {{ $report->end_time }}
+                                <label class="block text-sm font-medium text-gray-700">Kerja Saat</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $report->work_day_type }}</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Waktu Mulai</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $report->start_time }}</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Waktu Selesai</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $report->end_time }}</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Status</label>
+                                <div class="mt-1">
                                     @if($report->is_overnight)
-                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                            Lembur
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            Overnight
                                         </span>
                                     @endif
-                                </dd>
+                                    @if($report->is_overtime)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2">
+                                            Overtime
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
 
                             @if(auth()->user()->hasRole('admin'))

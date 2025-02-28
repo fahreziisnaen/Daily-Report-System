@@ -30,6 +30,7 @@ class ProfileController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $request->user()->id],
+            'homebase' => ['required', 'string', 'max:255'],
             'avatar' => ['nullable', 'image', 'max:1024'], // max 1MB
             'signature' => ['nullable', 'image', 'max:1024'],
         ]);
@@ -53,6 +54,7 @@ class ProfileController extends Controller
         $request->user()->fill([
             'name' => $request->name,
             'email' => $request->email,
+            'homebase' => $request->homebase,
         ]);
 
         if ($request->user()->isDirty('email')) {

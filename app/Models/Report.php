@@ -15,12 +15,15 @@ class Report extends Model
         'location',
         'start_time',
         'end_time',
-        'is_overnight'
+        'is_overnight',
+        'is_overtime',
+        'work_day_type'
     ];
 
     protected $casts = [
         'report_date' => 'date',
-        'is_overnight' => 'boolean'
+        'is_overnight' => 'boolean',
+        'is_overtime' => 'boolean',
     ];
 
     public function details(): HasMany

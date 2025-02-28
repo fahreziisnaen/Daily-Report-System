@@ -17,6 +17,8 @@ return new class extends Migration
             $table->time('start_time');
             $table->time('end_time');
             $table->boolean('is_overnight')->default(false);
+            $table->boolean('is_overtime')->default(false);
+            $table->enum('work_day_type', ['Hari Kerja', 'Hari Libur']);
             $table->timestamps();
         });
 
