@@ -43,9 +43,15 @@ class ReportController extends Controller
             'bindings' => $query->getBindings()
         ]);
 
+        // Get unique values for dropdowns
+        $locations = Report::distinct()->pluck('location');
+        $projectCodes = Report::distinct()->pluck('project_code');
+        $employees = User::pluck('name');
+        $workDayTypes = ['Hari Kerja', 'Hari Libur'];
+
         $reports = $query->paginate(10)->withQueryString();
 
-        return view('reports.index', compact('reports'));
+        return view('reports.index', compact('reports', 'locations', 'projectCodes', 'workDayTypes', 'employees'));
     }
 
     public function create()
@@ -96,7 +102,7 @@ class ReportController extends Controller
             ]);
         }
 
-        return redirect()->route('reports.index')
+        return redirect()->route('reports.show', $report)
             ->with('success', 'Laporan berhasil dibuat.');
     }
 

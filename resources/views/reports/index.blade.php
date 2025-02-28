@@ -13,251 +13,169 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Filter Section - Collapsible on mobile -->
-            <div x-data="{ showFilters: false }" class="mb-6">
-                <button @click="showFilters = !showFilters" 
-                    class="md:hidden w-full flex items-center justify-between p-4 bg-white rounded-lg shadow">
-                    <span>Filter</span>
-                    <svg class="w-5 h-5" :class="{'rotate-180': showFilters}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-
-                <div :class="{'hidden': !showFilters}" class="md:block mt-4 md:mt-0">
-                    <form method="GET" action="{{ route('reports.index') }}" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div x-data="{
-                                type: 'employee',
-                                searchTerm: '{{ request('employee_search') }}',
-                                results: [],
-                                open: false,
-
-                                async search() {
-                                    if (this.searchTerm.length < 2) {
-                                        this.results = [];
-                                        this.open = false;
-                                        return;
-                                    }
-
-                                    const endpoints = {
-                                        'employee': '/api/search-employees',
-                                        'location': '/api/search-locations',
-                                        'project': '/api/search-projects'
-                                    };
-
-                                    try {
-                                        const response = await fetch(`${endpoints[this.type]}?q=${encodeURIComponent(this.searchTerm)}`);
-                                        this.results = await response.json();
-                                        this.open = true;
-                                    } catch (error) {
-                                        console.error('Search error:', error);
-                                        this.results = [];
-                                    }
-                                },
-
-                                select(result) {
-                                    this.searchTerm = result;
-                                    this.open = false;
-                                }
-                            }">
-                                <label class="block text-sm font-medium text-gray-700">Nama Karyawan</label>
-                                <div class="relative">
-                                    <input type="text" 
-                                        x-model="searchTerm"
-                                        @input="search()"
-                                        @click="open = true"
-                                        name="employee_search"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        placeholder="Cari karyawan..."
-                                        autocomplete="off">
-                                    
-                                    <!-- Dropdown -->
-                                    <div x-show="open && results.length > 0" 
-                                        @click.away="open = false"
-                                        class="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
-                                        <ul class="max-h-60 rounded-md py-1 text-base overflow-auto">
-                                            <template x-for="result in results" :key="result">
-                                                <li @click="select(result)"
-                                                    class="cursor-pointer hover:bg-indigo-500 hover:text-white px-3 py-2"
-                                                    x-text="result">
-                                                </li>
-                                            </template>
-                                        </ul>
+            <!-- Search/Filter Section -->
+            <div class="mb-4">
+                <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col sm:flex-row gap-4">
+                    @if(auth()->user()->isAdmin())
+                    <div class="flex-1" x-data="{ 
+                        search: '{{ request('employee_search') }}',
+                        items: {{ $employees }},
+                        filteredItems: [],
+                        showDropdown: false,
+                        init() {
+                            this.filteredItems = this.items;
+                            this.$watch('search', (value) => {
+                                this.filteredItems = this.items.filter(item => 
+                                    item.toLowerCase().includes(value.toLowerCase())
+                                );
+                                this.showDropdown = value.length > 0;
+                            });
+                        }
+                    }">
+                        <x-input-label for="employee_search" :value="__('Nama Karyawan')" />
+                        <div class="relative">
+                            <input type="text" 
+                                id="employee_search"
+                                name="employee_search"
+                                x-model="search"
+                                @focus="showDropdown = true"
+                                @click.away="showDropdown = false"
+                                placeholder="Cari berdasarkan nama karyawan..." 
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            
+                            <!-- Dropdown -->
+                            <div x-show="showDropdown" 
+                                x-transition
+                                class="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                                <template x-for="item in filteredItems" :key="item">
+                                    <div @click="search = item; showDropdown = false"
+                                        x-text="item"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                        :class="{'bg-gray-50': search === item}">
                                     </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Tanggal</label>
-                                <input type="date" 
-                                    name="report_date" 
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    value="{{ request('report_date') }}">
-                            </div>
-
-                            <div x-data="{
-                                type: 'location',
-                                searchTerm: '{{ request('location') }}',
-                                results: [],
-                                open: false,
-
-                                async search() {
-                                    if (this.searchTerm.length < 2) {
-                                        this.results = [];
-                                        this.open = false;
-                                        return;
-                                    }
-
-                                    const endpoints = {
-                                        'employee': '/api/search-employees',
-                                        'location': '/api/search-locations',
-                                        'project': '/api/search-projects'
-                                    };
-
-                                    try {
-                                        const response = await fetch(`${endpoints[this.type]}?q=${encodeURIComponent(this.searchTerm)}`);
-                                        this.results = await response.json();
-                                        this.open = true;
-                                    } catch (error) {
-                                        console.error('Search error:', error);
-                                        this.results = [];
-                                    }
-                                },
-
-                                select(result) {
-                                    this.searchTerm = result;
-                                    this.open = false;
-                                }
-                            }">
-                                <label class="block text-sm font-medium text-gray-700">Lokasi</label>
-                                <div class="relative">
-                                    <input type="text" 
-                                        x-model="searchTerm"
-                                        @input="search()"
-                                        @click="open = true"
-                                        name="location"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        placeholder="Cari lokasi..."
-                                        value="{{ request('location') }}"
-                                        autocomplete="off">
-                                    
-                                    <!-- Dropdown -->
-                                    <div x-show="open && results.length > 0" 
-                                        @click.away="open = false"
-                                        class="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
-                                        <ul class="max-h-60 rounded-md py-1 text-base overflow-auto">
-                                            <template x-for="result in results" :key="result">
-                                                <li @click="select(result)"
-                                                    class="cursor-pointer hover:bg-indigo-500 hover:text-white px-3 py-2"
-                                                    x-text="result">
-                                                </li>
-                                            </template>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div x-data="{
-                                type: 'project',
-                                searchTerm: '{{ request('project_code') }}',
-                                results: [],
-                                open: false,
-
-                                async search() {
-                                    if (this.searchTerm.length < 2) {
-                                        this.results = [];
-                                        this.open = false;
-                                        return;
-                                    }
-
-                                    const endpoints = {
-                                        'employee': '/api/search-employees',
-                                        'location': '/api/search-locations',
-                                        'project': '/api/search-projects'
-                                    };
-
-                                    try {
-                                        const response = await fetch(`${endpoints[this.type]}?q=${encodeURIComponent(this.searchTerm)}`);
-                                        this.results = await response.json();
-                                        this.open = true;
-                                    } catch (error) {
-                                        console.error('Search error:', error);
-                                        this.results = [];
-                                    }
-                                },
-
-                                select(result) {
-                                    this.searchTerm = result;
-                                    this.open = false;
-                                }
-                            }">
-                                <label class="block text-sm font-medium text-gray-700">Kode Project</label>
-                                <div class="relative">
-                                    <input type="text" 
-                                        x-model="searchTerm"
-                                        @input="search()"
-                                        @click="open = true"
-                                        name="project_code"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        placeholder="Cari kode project..."
-                                        value="{{ request('project_code') }}"
-                                        autocomplete="off">
-                                    
-                                    <!-- Dropdown -->
-                                    <div x-show="open && results.length > 0" 
-                                        @click.away="open = false"
-                                        class="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
-                                        <ul class="max-h-60 rounded-md py-1 text-base overflow-auto">
-                                            <template x-for="result in results" :key="result">
-                                                <li @click="select(result)"
-                                                    class="cursor-pointer hover:bg-indigo-500 hover:text-white px-3 py-2"
-                                                    x-text="result">
-                                                </li>
-                                            </template>
-                                        </ul>
-                                    </div>
+                                </template>
+                                <div x-show="filteredItems.length === 0" 
+                                    class="px-4 py-2 text-sm text-gray-500">
+                                    Tidak ada hasil yang cocok
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    @endif
 
-                        <!-- Active Filters -->
+                    <!-- Filter lainnya tetap ditampilkan -->
+                    <div class="flex-1">
+                        <x-input-label for="report_date" :value="__('Tanggal')" />
+                        <input type="date" 
+                            id="report_date"
+                            name="report_date"
+                            value="{{ request('report_date') }}"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div class="flex-1" x-data="{ 
+                        search: '{{ request('location') }}',
+                        items: {{ $locations }},
+                        filteredItems: [],
+                        showDropdown: false,
+                        init() {
+                            this.filteredItems = this.items;
+                            this.$watch('search', (value) => {
+                                this.filteredItems = this.items.filter(item => 
+                                    item.toLowerCase().includes(value.toLowerCase())
+                                );
+                                this.showDropdown = value.length > 0;
+                            });
+                        }
+                    }">
+                        <x-input-label for="location" :value="__('Lokasi')" />
+                        <div class="relative">
+                            <input type="text" 
+                                id="location"
+                                name="location"
+                                x-model="search"
+                                @focus="showDropdown = true"
+                                @click.away="showDropdown = false"
+                                placeholder="Cari berdasarkan lokasi..."
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            
+                            <!-- Dropdown -->
+                            <div x-show="showDropdown" 
+                                x-transition
+                                class="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                                <template x-for="item in filteredItems" :key="item">
+                                    <div @click="search = item; showDropdown = false"
+                                        x-text="item"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                        :class="{'bg-gray-50': search === item}">
+                                    </div>
+                                </template>
+                                <div x-show="filteredItems.length === 0" 
+                                    class="px-4 py-2 text-sm text-gray-500">
+                                    Tidak ada hasil yang cocok
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1" x-data="{ 
+                        search: '{{ request('project_code') }}',
+                        items: {{ $projectCodes }},
+                        filteredItems: [],
+                        showDropdown: false,
+                        init() {
+                            this.filteredItems = this.items;
+                            this.$watch('search', (value) => {
+                                this.filteredItems = this.items.filter(item => 
+                                    item.toLowerCase().includes(value.toLowerCase())
+                                );
+                                this.showDropdown = value.length > 0;
+                            });
+                        }
+                    }">
+                        <x-input-label for="project_code" :value="__('Project')" />
+                        <div class="relative">
+                            <input type="text" 
+                                id="project_code"
+                                name="project_code"
+                                x-model="search"
+                                @focus="showDropdown = true"
+                                @click.away="showDropdown = false"
+                                placeholder="Cari berdasarkan kode project..."
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            
+                            <!-- Dropdown -->
+                            <div x-show="showDropdown" 
+                                x-transition
+                                class="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                                <template x-for="item in filteredItems" :key="item">
+                                    <div @click="search = item; showDropdown = false"
+                                        x-text="item"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                        :class="{'bg-gray-50': search === item}">
+                                    </div>
+                                </template>
+                                <div x-show="filteredItems.length === 0" 
+                                    class="px-4 py-2 text-sm text-gray-500">
+                                    Tidak ada hasil yang cocok
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full sm:w-auto flex gap-2">
+                        <button type="submit" 
+                            class="flex-1 sm:flex-none px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                            {{ __('Cari') }}
+                        </button>
                         @if(request()->hasAny(['employee_search', 'report_date', 'location', 'project_code']))
-                            <div class="flex flex-wrap gap-2 mt-2">
-                                @if(request('employee_search'))
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-                                        Karyawan: {{ request('employee_search') }}
-                                    </span>
-                                @endif
-                                @if(request('report_date'))
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-                                        Tanggal: {{ \Carbon\Carbon::parse(request('report_date'))->format('d/m/Y') }}
-                                    </span>
-                                @endif
-                                @if(request('location'))
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-                                        Lokasi: {{ request('location') }}
-                                    </span>
-                                @endif
-                                @if(request('project_code'))
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-                                        Project: {{ request('project_code') }}
-                                    </span>
-                                @endif
-                            </div>
-                        @endif
-
-                        <div class="flex justify-end space-x-3">
                             <a href="{{ route('reports.index') }}" 
-                                class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-400">
-                                Reset
+                                class="flex-1 sm:flex-none px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 inline-flex items-center justify-center">
+                                {{ __('Reset') }}
                             </a>
-                            <button type="submit" 
-                                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
-                                Filter
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                        @endif
+                    </div>
+                </form>
             </div>
 
             <!-- Reports List -->
@@ -269,13 +187,12 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lokasi</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Waktu</th>
                                     @if(auth()->user()->isAdmin())
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pekerja</th>
                                     @endif
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lokasi</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Waktu</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
                                 </tr>
                             </thead>
@@ -286,15 +203,28 @@
                                             <div class="text-sm text-gray-900">{{ $report->report_date->format('d/m/Y') }}</div>
                                             <div class="text-xs text-gray-500">{{ $report->created_at->diffForHumans() }}</div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->project_code }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->location }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ substr($report->start_time, 0, 5) }} - {{ substr($report->end_time, 0, 5) }}
-                                        </td>
                                         @if(auth()->user()->isAdmin())
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->user->name }}</td>
                                         @endif
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->work_day_type }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->project_code }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->location }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ substr($report->start_time, 0, 5) }} - {{ substr($report->end_time, 0, 5) }}
+                                            </div>
+                                            <div class="flex gap-1 mt-1">
+                                                @if($report->is_overtime)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                        Overtime
+                                                    </span>
+                                                @endif
+                                                @if($report->is_overnight)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                        Overnight
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex justify-end gap-2">
                                                 <a href="{{ route('reports.show', $report) }}" 
@@ -417,14 +347,20 @@
                             </div>
 
                             <!-- Additional Info -->
-                            <div class="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                    <div class="text-gray-500">Waktu</div>
-                                    <div class="font-medium">{{ substr($report->start_time, 0, 5) }} - {{ substr($report->end_time, 0, 5) }}</div>
-                                </div>
-                                <div>
-                                    <div class="text-gray-500">Status</div>
-                                    <div class="font-medium">{{ $report->work_day_type }}</div>
+                            <div class="text-sm">
+                                <div class="text-gray-500">Waktu</div>
+                                <div class="font-medium flex items-center gap-2">
+                                    <span>{{ substr($report->start_time, 0, 5) }} - {{ substr($report->end_time, 0, 5) }}</span>
+                                    @if($report->is_overtime)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            Overtime
+                                        </span>
+                                    @endif
+                                    @if($report->is_overnight)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                            Overnight
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
 
