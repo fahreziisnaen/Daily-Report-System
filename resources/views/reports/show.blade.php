@@ -16,15 +16,76 @@
                     </a>
                 @endcan
                 @can('delete', $report)
-                    <form action="{{ route('reports.destroy', $report) }}" method="POST" class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" 
-                            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700"
-                            onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini?')">
+                    <!-- Delete Button and Modal -->
+                    <div x-data="{ showModal: false }">
+                        <!-- Trigger Button -->
+                        <button @click="showModal = true" 
+                            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700">
                             {{ __('Hapus') }}
                         </button>
-                    </form>
+
+                        <!-- Modal Backdrop -->
+                        <div x-show="showModal" 
+                            x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0"
+                            x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition ease-in duration-200"
+                            x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0"
+                            class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center"
+                            @click="showModal = false">
+
+                            <!-- Modal Content -->
+                            <div x-show="showModal" 
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0 transform scale-90"
+                                x-transition:enter-end="opacity-100 transform scale-100"
+                                x-transition:leave="transition ease-in duration-200"
+                                x-transition:leave-start="opacity-100 transform scale-100"
+                                x-transition:leave-end="opacity-0 transform scale-90"
+                                @click.stop
+                                class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                                
+                                <!-- Modal Header -->
+                                <div class="p-4 border-b">
+                                    <h3 class="text-lg font-medium text-gray-900">Konfirmasi Penghapusan</h3>
+                                </div>
+
+                                <!-- Modal Body -->
+                                <div class="p-4">
+                                    <div class="flex items-center mb-4">
+                                        <div class="flex-shrink-0 bg-red-100 rounded-full p-2 mr-3">
+                                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                            </svg>
+                                        </div>
+                                        <p class="text-gray-600">Apakah Anda yakin ingin menghapus laporan ini?</p>
+                                    </div>
+                                    <div class="text-sm text-gray-500 bg-gray-50 rounded p-3">
+                                        <p><span class="font-medium">Tanggal:</span> {{ $report->report_date->format('d/m/Y') }}</p>
+                                        <p><span class="font-medium">Project:</span> {{ $report->project_code }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Modal Footer -->
+                                <div class="p-4 border-t flex justify-end space-x-3">
+                                    <button type="button" @click="showModal = false"
+                                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
+                                        Batal
+                                    </button>
+                                    <form action="{{ route('reports.destroy', $report) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                            class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">
+                                            Hapus Laporan
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @endcan
             </div>
         </div>

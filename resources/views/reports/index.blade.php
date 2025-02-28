@@ -1,15 +1,29 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Daftar Laporan Pekerjaan') }}
-        </h2>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Daftar Laporan Pekerjaan') }}
+            </h2>
+            <a href="{{ route('reports.create') }}" 
+                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
+                {{ __('Buat Laporan') }}
+            </a>
+        </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Filter Section -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Filter Section - Collapsible on mobile -->
+            <div x-data="{ showFilters: false }" class="mb-6">
+                <button @click="showFilters = !showFilters" 
+                    class="md:hidden w-full flex items-center justify-between p-4 bg-white rounded-lg shadow">
+                    <span>Filter</span>
+                    <svg class="w-5 h-5" :class="{'rotate-180': showFilters}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <div :class="{'hidden': !showFilters}" class="md:block mt-4 md:mt-0">
                     <form method="GET" action="{{ route('reports.index') }}" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div x-data="{
@@ -246,92 +260,281 @@
                 </div>
             </div>
 
-            <!-- Reports Table -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <div class="flex justify-end mb-4">
-                        <a href="{{ route('reports.create') }}" 
-                            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            {{ __('Buat Laporan') }}
-                        </a>
-                    </div>
-
+            <!-- Reports List -->
+            <!-- Desktop View (Hidden on Mobile) -->
+            <div class="hidden md:block">
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TANGGAL</th>
-                                    @if(auth()->user()->hasRole('admin'))
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KARYAWAN</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lokasi</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Waktu</th>
+                                    @if(auth()->user()->isAdmin())
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pekerja</th>
                                     @endif
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KODE PROJECT</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOKASI</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">WAKTU</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AKSI</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse($reports as $report)
+                                @foreach($reports as $report)
                                     <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $report->report_date->format('d/m/Y') }}
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">{{ $report->report_date->format('d/m/Y') }}</div>
+                                            <div class="text-xs text-gray-500">{{ $report->created_at->diffForHumans() }}</div>
                                         </td>
-                                        @if(auth()->user()->hasRole('admin'))
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ $report->user->name }}
-                                            </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->project_code }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->location }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ substr($report->start_time, 0, 5) }} - {{ substr($report->end_time, 0, 5) }}
+                                        </td>
+                                        @if(auth()->user()->isAdmin())
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->user->name }}</td>
                                         @endif
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $report->project_code }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $report->location }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $report->start_time }} - {{ $report->end_time }}
-                                            @if($report->is_overtime)
-                                                <span class="text-xs text-yellow-600">(Lembur)</span>
-                                            @endif
-                                            @if($report->is_overnight)
-                                                <span class="text-xs text-purple-600">(Overnight)</span>
-                                            @endif
-                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->work_day_type }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <a href="{{ route('reports.show', $report) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Detail</a>
-                                            <a href="{{ route('reports.export', $report) }}" class="text-green-600 hover:text-green-900 mr-3">Export</a>
-                                            @can('update', $report)
-                                                <a href="{{ route('reports.edit', $report) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">Edit</a>
-                                            @endcan
-                                            @can('delete', $report)
-                                                <form action="{{ route('reports.destroy', $report) }}" method="POST" class="inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-900" 
-                                                        onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini?')">
-                                                        Hapus
-                                                    </button>
-                                                </form>
-                                            @endcan
+                                            <div class="flex justify-end gap-2">
+                                                <a href="{{ route('reports.show', $report) }}" 
+                                                    class="text-indigo-600 hover:text-indigo-900">Detail</a>
+                                                <a href="{{ route('reports.export', $report) }}" 
+                                                    class="text-green-600 hover:text-green-900">Export</a>
+                                                @can('update', $report)
+                                                    <a href="{{ route('reports.edit', $report) }}" 
+                                                        class="text-yellow-600 hover:text-yellow-900">Edit</a>
+                                                @endcan
+                                                @can('delete', $report)
+                                                    <!-- Delete Button and Modal -->
+                                                    <div x-data="{ showModal: false }">
+                                                        <button @click="showModal = true" 
+                                                            class="text-red-600 hover:text-red-900">
+                                                            Hapus
+                                                        </button>
+
+                                                        <!-- Modal Backdrop -->
+                                                        <div x-show="showModal" 
+                                                            x-transition:enter="transition ease-out duration-300"
+                                                            x-transition:enter-start="opacity-0"
+                                                            x-transition:enter-end="opacity-100"
+                                                            x-transition:leave="transition ease-in duration-200"
+                                                            x-transition:leave-start="opacity-100"
+                                                            x-transition:leave-end="opacity-0"
+                                                            class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center"
+                                                            @click="showModal = false">
+
+                                                            <!-- Modal Content -->
+                                                            <div x-show="showModal" 
+                                                                x-transition:enter="transition ease-out duration-300"
+                                                                x-transition:enter-start="opacity-0 transform scale-90"
+                                                                x-transition:enter-end="opacity-100 transform scale-100"
+                                                                x-transition:leave="transition ease-in duration-200"
+                                                                x-transition:leave-start="opacity-100 transform scale-100"
+                                                                x-transition:leave-end="opacity-0 transform scale-90"
+                                                                @click.stop
+                                                                class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                                                                
+                                                                <!-- Modal Header -->
+                                                                <div class="p-4 border-b">
+                                                                    <h3 class="text-lg font-medium text-gray-900 text-left">Konfirmasi Penghapusan</h3>
+                                                                </div>
+
+                                                                <!-- Modal Body -->
+                                                                <div class="p-4">
+                                                                    <div class="flex items-start mb-4">
+                                                                        <div class="flex-shrink-0 bg-red-100 rounded-full p-2 mr-3">
+                                                                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                                            </svg>
+                                                                        </div>
+                                                                        <p class="text-gray-600">Apakah Anda yakin ingin menghapus laporan ini?</p>
+                                                                    </div>
+                                                                    <div class="text-sm text-gray-500 bg-gray-50 rounded p-3">
+                                                                        <div class="text-left">
+                                                                            <p>Tanggal: {{ $report->report_date->format('d/m/Y') }}</p>
+                                                                            <p>Project: {{ $report->project_code }}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Modal Footer -->
+                                                                <div class="p-4 border-t flex justify-end space-x-3">
+                                                                    <button type="button" @click="showModal = false"
+                                                                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
+                                                                        Batal
+                                                                    </button>
+                                                                    <form action="{{ route('reports.destroy', $report) }}" method="POST" class="inline">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit" 
+                                                                            class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">
+                                                                            Hapus Laporan
+                                                                        </button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endcan
+                                            </div>
                                         </td>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="{{ auth()->user()->hasRole('admin') ? 6 : 5 }}" class="px-6 py-4 text-center text-gray-500">
-                                            Tidak ada laporan yang ditemukan.
-                                        </td>
-                                    </tr>
-                                @endforelse
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="mt-4">
-                        {{ $reports->links() }}
-                    </div>
                 </div>
+            </div>
+
+            <!-- Mobile View (Hidden on Desktop) -->
+            <div class="md:hidden space-y-4">
+                @foreach($reports as $report)
+                    <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                        <div class="p-4 space-y-3">
+                            <!-- Header -->
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $report->report_date->format('d/m/Y') }}</div>
+                                    <div class="text-xs text-gray-500">{{ $report->created_at->diffForHumans() }}</div>
+                                </div>
+                                @if(auth()->user()->isAdmin())
+                                    <div class="text-sm text-gray-600">{{ $report->user->name }}</div>
+                                @endif
+                            </div>
+
+                            <!-- Details -->
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <div class="text-gray-500">Project</div>
+                                    <div class="font-medium">{{ $report->project_code }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500">Lokasi</div>
+                                    <div class="font-medium">{{ $report->location }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Info -->
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <div class="text-gray-500">Waktu</div>
+                                    <div class="font-medium">{{ substr($report->start_time, 0, 5) }} - {{ substr($report->end_time, 0, 5) }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500">Status</div>
+                                    <div class="font-medium">{{ $report->work_day_type }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex justify-end gap-2">
+                                <a href="{{ route('reports.show', $report) }}" 
+                                    class="inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-md text-sm font-medium hover:bg-indigo-100">
+                                    <span>Lihat Detail</span>
+                                    <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                                <a href="{{ route('reports.export', $report) }}" 
+                                    class="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-600 rounded-md text-sm font-medium hover:bg-green-100">
+                                    <span>Export</span>
+                                    <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                </a>
+                                @can('update', $report)
+                                    <a href="{{ route('reports.edit', $report) }}" 
+                                        class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-600 rounded-md text-sm font-medium hover:bg-yellow-100">
+                                        <span>Edit</span>
+                                        <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </a>
+                                @endcan
+                                @can('delete', $report)
+                                    <!-- Delete Button and Modal -->
+                                    <div x-data="{ showModal: false }">
+                                        <button @click="showModal = true" 
+                                            class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-md text-sm font-medium hover:bg-red-100">
+                                            <span>Hapus</span>
+                                        </button>
+
+                                        <!-- Modal Backdrop -->
+                                        <div x-show="showModal" 
+                                            x-transition:enter="transition ease-out duration-300"
+                                            x-transition:enter-start="opacity-0"
+                                            x-transition:enter-end="opacity-100"
+                                            x-transition:leave="transition ease-in duration-200"
+                                            x-transition:leave-start="opacity-100"
+                                            x-transition:leave-end="opacity-0"
+                                            class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center"
+                                            @click="showModal = false">
+
+                                            <!-- Modal Content -->
+                                            <div x-show="showModal" 
+                                                x-transition:enter="transition ease-out duration-300"
+                                                x-transition:enter-start="opacity-0 transform scale-90"
+                                                x-transition:enter-end="opacity-100 transform scale-100"
+                                                x-transition:leave="transition ease-in duration-200"
+                                                x-transition:leave-start="opacity-100 transform scale-100"
+                                                x-transition:leave-end="opacity-0 transform scale-90"
+                                                @click.stop
+                                                class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                                                
+                                                <!-- Modal Header -->
+                                                <div class="p-4 border-b">
+                                                    <h3 class="text-lg font-medium text-gray-900 text-left">Konfirmasi Penghapusan</h3>
+                                                </div>
+
+                                                <!-- Modal Body -->
+                                                <div class="p-4">
+                                                    <div class="flex items-start mb-4">
+                                                        <div class="flex-shrink-0 bg-red-100 rounded-full p-2 mr-3">
+                                                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                            </svg>
+                                                        </div>
+                                                        <p class="text-gray-600">Apakah Anda yakin ingin menghapus laporan ini?</p>
+                                                    </div>
+                                                    <div class="text-sm text-gray-500 bg-gray-50 rounded p-3">
+                                                        <div class="text-left">
+                                                            <p>Tanggal: {{ $report->report_date->format('d/m/Y') }}</p>
+                                                            <p>Project: {{ $report->project_code }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Modal Footer -->
+                                                <div class="p-4 border-t flex justify-end space-x-3">
+                                                    <button type="button" @click="showModal = false"
+                                                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
+                                                        Batal
+                                                    </button>
+                                                    <form action="{{ route('reports.destroy', $report) }}" method="POST" class="inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" 
+                                                            class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">
+                                                            Hapus Laporan
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endcan
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-6">
+                {{ $reports->onEachSide(1)->links() }}
             </div>
         </div>
     </div>

@@ -5,172 +5,162 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <form x-data="reportForm" method="POST" action="{{ route('reports.update', $report) }}" class="space-y-8">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                <div class="p-4 pb-24 md:pb-4">
+                    <form method="POST" action="{{ route('reports.update', $report) }}" class="space-y-6">
                         @csrf
                         @method('PUT')
                         
                         <!-- Basic Information Section -->
-                        <div class="bg-gray-50 rounded-lg p-6">
-                            <h3 class="text-lg font-medium text-gray-900 mb-6">Informasi Pekerjaan</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="report_date" class="block text-sm font-medium text-gray-700">Tanggal</label>
-                                    <input type="date" name="report_date" id="report_date" 
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
-                                        required value="{{ old('report_date', $report->report_date->format('Y-m-d')) }}">
-                                    @error('report_date')
-                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Pekerjaan</h3>
+                            
+                            <!-- Tanggal -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                                <input type="date" name="report_date" 
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base" 
+                                    value="{{ old('report_date', $report->report_date->format('Y-m-d')) }}"
+                                    required>
+                            </div>
 
-                                <div>
-                                    <label for="project_code" class="block text-sm font-medium text-gray-700">Kode Project</label>
-                                    <input type="text" name="project_code" id="project_code" 
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
-                                        required value="{{ old('project_code', $report->project_code) }}">
-                                    @error('project_code')
-                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
+                            <!-- Kode Project -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kode Project</label>
+                                <input type="text" name="project_code" 
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base" 
+                                    value="{{ old('project_code', $report->project_code) }}"
+                                    required>
+                            </div>
 
-                                <div>
-                                    <label for="location" class="block text-sm font-medium text-gray-700">Lokasi</label>
-                                    <input type="text" name="location" id="location" 
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
-                                        required value="{{ old('location', $report->location) }}">
-                                    @error('location')
-                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Kerja Saat</label>
-                                    <div class="mt-2 space-x-4">
-                                        <label class="inline-flex items-center">
-                                            <input type="radio" 
-                                                name="work_day_type" 
-                                                value="Hari Kerja" 
-                                                class="form-radio text-indigo-600"
-                                                {{ old('work_day_type', $report->work_day_type) === 'Hari Kerja' ? 'checked' : '' }}
-                                                required>
-                                            <span class="ml-2">Hari Kerja</span>
-                                        </label>
-                                        <label class="inline-flex items-center">
-                                            <input type="radio" 
-                                                name="work_day_type" 
-                                                value="Hari Libur" 
-                                                class="form-radio text-indigo-600"
-                                                {{ old('work_day_type', $report->work_day_type) === 'Hari Libur' ? 'checked' : '' }}
-                                                required>
-                                            <span class="ml-2">Hari Libur</span>
-                                        </label>
-                                    </div>
-                                    @error('work_day_type')
-                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-
+                            <!-- Lokasi -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Lokasi</label>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label for="start_time" class="block text-sm font-medium text-gray-700">Waktu Mulai</label>
-                                        <input type="time" name="start_time" id="start_time" 
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
-                                            required value="{{ old('start_time', $report->start_time) }}">
-                                        @error('start_time')
-                                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-
-                                    <div>
-                                        <label for="end_time" class="block text-sm font-medium text-gray-700">Waktu Selesai</label>
-                                        <input type="time" name="end_time" id="end_time" 
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
-                                            required value="{{ old('end_time', $report->end_time) }}">
-                                        @error('end_time')
-                                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-                                </div>
-
-                                <div class="col-span-2">
-                                    <label class="inline-flex items-center">
-                                        <input type="checkbox" name="is_overnight" 
-                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                                            {{ old('is_overnight', $report->is_overnight) ? 'checked' : '' }}>
-                                        <span class="ml-2 text-sm text-gray-600">
-                                            Lembur sampai esok hari
-                                            <span class="text-xs text-gray-500">(Centang jika waktu selesai melewati tengah malam)</span>
-                                        </span>
+                                    <label class="flex items-center space-x-2 p-2 bg-white rounded-md border border-gray-200">
+                                        <input type="radio" name="location" value="{{ auth()->user()->homebase }}" 
+                                            class="w-5 h-5 text-indigo-600"
+                                            {{ old('location', $report->location) === auth()->user()->homebase ? 'checked' : '' }}>
+                                        <span class="text-sm">Homebase</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 p-2 bg-white rounded-md border border-gray-200">
+                                        <input type="radio" name="location" value="Lokasi Dinas" 
+                                            class="w-5 h-5 text-indigo-600"
+                                            {{ old('location', $report->location) === 'Lokasi Dinas' ? 'checked' : '' }}>
+                                        <span class="text-sm">Lokasi Dinas</span>
                                     </label>
                                 </div>
+                            </div>
+
+                            <!-- Waktu -->
+                            <div class="mb-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Jam Mulai</label>
+                                        <input type="time" name="start_time" 
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
+                                            value="{{ old('start_time', $report->start_time) }}"
+                                            required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Jam Selesai</label>
+                                        <input type="time" name="end_time" 
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
+                                            value="{{ old('end_time', $report->end_time) }}"
+                                            required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kerja Saat -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Kerja Saat</label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <label class="flex items-center space-x-2 p-2 bg-white rounded-md border border-gray-200">
+                                        <input type="radio" name="work_day_type" value="Hari Kerja" 
+                                            class="w-5 h-5 text-indigo-600"
+                                            {{ old('work_day_type', $report->work_day_type) === 'Hari Kerja' ? 'checked' : '' }}>
+                                        <span class="text-sm">Hari Kerja</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 p-2 bg-white rounded-md border border-gray-200">
+                                        <input type="radio" name="work_day_type" value="Hari Libur" 
+                                            class="w-5 h-5 text-indigo-600"
+                                            {{ old('work_day_type', $report->work_day_type) === 'Hari Libur' ? 'checked' : '' }}>
+                                        <span class="text-sm">Hari Libur</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Overnight -->
+                            <div class="mb-4">
+                                <label class="flex items-center space-x-2 p-2 bg-white rounded-md border border-gray-200">
+                                    <input type="checkbox" name="is_overnight" 
+                                        class="w-5 h-5 rounded text-indigo-600"
+                                        {{ old('is_overnight', $report->is_overnight) ? 'checked' : '' }}>
+                                    <span class="text-sm">Lembur sampai esok hari</span>
+                                </label>
                             </div>
                         </div>
 
                         <!-- Work Details Section -->
-                        <div class="bg-gray-50 rounded-lg p-6">
-                            <h3 class="text-lg font-medium text-gray-900 mb-6">Detail Pekerjaan</h3>
-                            <div class="space-y-4" id="work-details-container">
-                                <template x-for="(detail, index) in workDetails" :key="index">
-                                    <div class="bg-white p-4 rounded-lg shadow-sm">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <h4 class="text-sm font-medium text-gray-900">Detail #<span x-text="index + 1"></span></h4>
-                                            <button type="button" @click="removeDetail(index)"
-                                                class="text-red-600 hover:text-red-900">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div class="md:col-span-3">
-                                                <label :for="'description_' + index" class="block text-sm font-medium text-gray-700">Deskripsi</label>
-                                                <textarea :name="'work_details[' + index + '][description]'" :id="'description_' + index" rows="3" 
-                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
-                                                    required x-model="detail.description"></textarea>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium text-gray-900">Detail Pekerjaan</h3>
+                                <button type="button" onclick="addWorkDetail()"
+                                    class="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md text-sm">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Tambah
+                                </button>
+                            </div>
+                            <div id="work-details" class="space-y-4">
+                                @foreach($report->details as $index => $detail)
+                                    <div class="p-4 bg-white rounded-lg border border-gray-200 relative">
+                                        <button type="button" onclick="this.parentElement.remove()" 
+                                            class="absolute right-2 top-2 text-gray-400 hover:text-red-500 p-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                        <div class="space-y-4 pr-8">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Uraian Pekerjaan</label>
+                                                <textarea name="work_details[{{ $index }}][description]" rows="2"
+                                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
+                                                    required>{{ $detail->description }}</textarea>
                                             </div>
                                             <div>
-                                                <label :for="'status_' + index" class="block text-sm font-medium text-gray-700">Status</label>
-                                                <select :name="'work_details[' + index + '][status]'" :id="'status_' + index" 
-                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                    x-model="detail.status">
-                                                    <option value="Selesai">Selesai</option>
-                                                    <option value="Dalam Proses">Dalam Proses</option>
-                                                    <option value="Tertunda">Tertunda</option>
-                                                    <option value="Bermasalah">Bermasalah</option>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                                <select name="work_details[{{ $index }}][status]"
+                                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
+                                                    required>
+                                                    <option value="Selesai" {{ $detail->status === 'Selesai' ? 'selected' : '' }}>Selesai</option>
+                                                    <option value="Dalam Proses" {{ $detail->status === 'Dalam Proses' ? 'selected' : '' }}>Dalam Proses</option>
+                                                    <option value="Tertunda" {{ $detail->status === 'Tertunda' ? 'selected' : '' }}>Tertunda</option>
+                                                    <option value="Bermasalah" {{ $detail->status === 'Bermasalah' ? 'selected' : '' }}>Bermasalah</option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
-                                </template>
-
-                                <!-- Tombol Tambah Detail -->
-                                <div class="flex justify-center pt-4">
-                                    <button type="button" @click="addDetail" 
-                                        class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                        {{ __('Tambah Detail') }}
-                                    </button>
-                                </div>
+                                @endforeach
                             </div>
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="flex justify-end space-x-3">
-                            <a href="{{ route('reports.show', $report) }}" 
-                                class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-400">
-                                {{ __('Batal') }}
-                            </a>
-                            
-                            <button type="submit" 
-                                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
-                                {{ __('Update') }}
-                            </button>
+                        <div class="fixed bottom-0 left-0 right-0 bg-white/95 border-t border-gray-200 p-4 z-50 backdrop-blur-sm md:relative md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+                            <div class="flex justify-end space-x-3 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                                <a href="{{ route('reports.show', $report) }}" 
+                                    class="flex-1 md:flex-none inline-flex justify-center items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
+                                    Batal
+                                </a>
+                                <button type="submit" 
+                                    class="flex-1 md:flex-none inline-flex justify-center items-center px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
+                                    Update
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -180,32 +170,42 @@
 
     @push('scripts')
     <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('reportForm', () => ({
-                workDetails: {!! json_encode($report->details->map(function($detail) {
-                    return [
-                        'description' => $detail->description,
-                        'status' => $detail->status
-                    ];
-                })->toArray()) !!} || [{
-                    description: '',
-                    status: 'Selesai'
-                }],
+        let detailCount = {{ count($report->details) }};
 
-                addDetail() {
-                    this.workDetails.push({
-                        description: '',
-                        status: 'Selesai'
-                    });
-                },
-
-                removeDetail(index) {
-                    if (this.workDetails.length > 1) {
-                        this.workDetails.splice(index, 1);
-                    }
-                }
-            }));
-        });
+        function addWorkDetail() {
+            const container = document.getElementById('work-details');
+            const detail = document.createElement('div');
+            detail.className = 'p-4 bg-white rounded-lg border border-gray-200 relative';
+            detail.innerHTML = `
+                <button type="button" onclick="this.parentElement.remove()" 
+                    class="absolute right-2 top-2 text-gray-400 hover:text-red-500 p-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                <div class="space-y-4 pr-8">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Uraian Pekerjaan</label>
+                        <textarea name="work_details[${detailCount}][description]" rows="2"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
+                            required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select name="work_details[${detailCount}][status]"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
+                            required>
+                            <option value="Selesai">Selesai</option>
+                            <option value="Dalam Proses">Dalam Proses</option>
+                            <option value="Tertunda">Tertunda</option>
+                            <option value="Bermasalah">Bermasalah</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            container.appendChild(detail);
+            detailCount++;
+        }
     </script>
     @endpush
 </x-app-layout> 
