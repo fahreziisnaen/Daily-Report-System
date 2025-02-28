@@ -97,4 +97,12 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')
             ->with('success', 'Password has been reset successfully');
     }
+
+    public function edit(User $user)
+    {
+        return view('profile.edit', [
+            'user' => $user,
+            'canUpdateRole' => true // Flag untuk menandai bahwa ini admin yang edit
+        ]);
+    }
 } 

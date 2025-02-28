@@ -244,6 +244,16 @@ class ReportController extends Controller
                 $sheet->setCellValue('B25', $report->user->name);
                 $sheet->setCellValue('B26', $exportDate);
 
+                // Tambahkan border bottom untuk cell tanda tangan
+                $sheet->getStyle('B25')->getBorders()->getBottom()->setBorderStyle(
+                    \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+                );
+
+                // Jika perlu border yang lebih tebal, gunakan BORDER_MEDIUM
+                // $sheet->getStyle('B25')->getBorders()->getBottom()->setBorderStyle(
+                //     \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM
+                // );
+
                 // Add signature if exists
                 if ($report->user->signature_path && file_exists(storage_path('app/public/' . $report->user->signature_path))) {
                     $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();

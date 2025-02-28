@@ -25,6 +25,12 @@
                         {{ __('User Management') }}
                     </x-nav-link>
                     @endcan
+
+                    @can('admin')
+                    <x-nav-link :href="route('admin.rekap.index')" :active="request()->routeIs('admin.rekap.*')">
+                        {{ __('Rekap') }}
+                    </x-nav-link>
+                    @endcan
                 </div>
             </div>
 
