@@ -178,7 +178,9 @@
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold text-gray-900 mb-4">Laporan Terbaru</h3>
-                            <div class="overflow-x-auto">
+                            
+                            <!-- Desktop View (Hidden on Mobile) -->
+                            <div class="hidden md:block overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
@@ -211,6 +213,44 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <!-- Mobile View (Hidden on Desktop) -->
+                            <div class="md:hidden space-y-4">
+                                @foreach($recentReports as $report)
+                                    <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900">{{ $report->report_date->format('d/m/Y') }}</div>
+                                                <div class="text-xs text-gray-500">{{ $report->created_at->diffForHumans() }}</div>
+                                            </div>
+                                            @if(auth()->user()->isAdmin())
+                                                <div class="text-sm text-gray-600">{{ $report->user->name }}</div>
+                                            @endif
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-2 gap-2 text-sm">
+                                            <div>
+                                                <div class="text-gray-500">Project</div>
+                                                <div class="font-medium">{{ $report->project_code }}</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-500">Lokasi</div>
+                                                <div class="font-medium">{{ $report->location }}</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex justify-end">
+                                            <a href="{{ route('reports.show', $report) }}" 
+                                                class="inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-md text-sm font-medium hover:bg-indigo-100">
+                                                <span>Lihat Detail</span>
+                                                <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     </div>

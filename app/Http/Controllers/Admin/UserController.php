@@ -10,10 +10,30 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles')->paginate(10);
+        $query = User::with('roles')->latest();
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('homebase', 'like', "%{$search}%");
+            });
+        }
+
+        // Role filter
+        if ($request->filled('role')) {
+            $query->whereHas('roles', function($q) use ($request) {
+                $q->where('name', $request->role);
+            });
+        }
+
+        $users = $query->paginate(10)->withQueryString();
         $roles = Role::all();
+
         return view('admin.users.index', compact('users', 'roles'));
     }
 
@@ -33,6 +53,7 @@ class UserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'homebase' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', 'exists:roles,name'],
         ]);
@@ -40,6 +61,7 @@ class UserController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'homebase' => $request->homebase,
             'password' => Hash::make($request->password),
         ]);
 

@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom styles for mobile optimization */
+@layer utilities {
+    .touch-target {
+        @apply p-2;  /* Minimum touch target size */
+    }
+    
+    /* Card styles */
+    .mobile-card {
+        @apply bg-white rounded-lg shadow-sm p-4 space-y-3;
+    }
+    
+    /* Text sizes optimized for mobile */
+    .mobile-text {
+        @apply text-base leading-relaxed;
+    }
+}
+
+/* Improve spacing on mobile */
+@media (max-width: 640px) {
+    .space-y-4 > * + * {
+        margin-top: 1rem;
+    }
+    
+    .p-6 {
+        padding: 1rem;
+    }
+}
