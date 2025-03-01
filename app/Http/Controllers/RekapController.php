@@ -14,11 +14,10 @@ class RekapController extends Controller
         $month = $request->get('month', now()->month);
         $year = $request->get('year', now()->year);
 
-        $query = User::role('employee')
-            ->with(['reports' => function($query) use ($month, $year) {
-                $query->whereMonth('report_date', $month)
-                    ->whereYear('report_date', $year);
-            }]);
+        $query = User::with(['reports' => function($query) use ($month, $year) {
+            $query->whereMonth('report_date', $month)
+                ->whereYear('report_date', $year);
+        }]);
 
         $users = $query->get()->map(function($user) {
             $totalWorkHours = 0;
@@ -46,51 +45,19 @@ class RekapController extends Controller
                     'normal_end' => $normalEnd->format('Y-m-d H:i')
                 ]);
 
-                // Hitung jam kerja normal
-                if ($start->lte($normalEnd) && $end->gte($normalStart)) {
-                    $workStart = Carbon::createFromTimestamp(max($start->timestamp, $normalStart->timestamp));
-                    $workEnd = Carbon::createFromTimestamp(min($end->timestamp, $normalEnd->timestamp));
-                    $workMinutes = $workStart->diffInMinutes($workEnd);  // Dari workStart ke workEnd
-                    $workHours = $workMinutes / 60;
-                    
-                    \Log::info('Work hours calculation', [
-                        'work_start' => $workStart->format('H:i'),
-                        'work_end' => $workEnd->format('H:i'),
-                        'work_minutes' => $workMinutes,
-                        'work_hours' => $workHours
-                    ]);
-                    
-                    $totalWorkHours += $workHours;
-                }
+                // Hitung total jam kerja
+                $totalHours = $start->diffInMinutes($end) / 60;
+                $totalWorkHours += $totalHours;
 
-                // Hitung lembur
-                // 1. Lembur pagi (sebelum 8:45)
-                if ($start->lt($normalStart)) {
-                    $overtimeMinutes = $start->diffInMinutes($normalStart);  // 8:45 - waktu mulai
-                    $overtimeHours = $overtimeMinutes / 60;
-                    
-                    \Log::info('Morning overtime calculation', [
-                        'start' => $start->format('H:i'),
-                        'normal_start' => $normalStart->format('H:i'),
-                        'overtime_minutes' => $overtimeMinutes,
-                        'overtime_hours' => $overtimeHours
-                    ]);
-                    
-                    $totalOvertimeHours += $overtimeHours;
-                }
-
-                // 2. Lembur sore (setelah 17:00)
-                if ($end->gt($normalEnd)) {
-                    $overtimeMinutes = $normalEnd->diffInMinutes($end);  // waktu akhir - 17:00
-                    $overtimeHours = $overtimeMinutes / 60;
-                    
-                    \Log::info('Evening overtime calculation', [
-                        'normal_end' => $normalEnd->format('H:i'),
-                        'end' => $end->format('H:i'),
-                        'overtime_minutes' => $overtimeMinutes,
-                        'overtime_hours' => $overtimeHours
-                    ]);
-                    
+                // Hitung jam lembur
+                if($report->is_overtime) {
+                    $overtimeHours = 0;
+                    if($start->lt($normalStart)) {
+                        $overtimeHours += $start->diffInMinutes($normalStart) / 60;
+                    }
+                    if($end->gt($normalEnd)) {
+                        $overtimeHours += $normalEnd->diffInMinutes($end) / 60;
+                    }
                     $totalOvertimeHours += $overtimeHours;
                 }
             }

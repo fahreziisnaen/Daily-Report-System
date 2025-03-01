@@ -19,10 +19,16 @@
                             <!-- Tanggal -->
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                                <input type="date" name="report_date" 
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base" 
+                                <input type="date" 
+                                    name="report_date" 
+                                    id="report_date"
+                                    class="hidden" 
                                     value="{{ old('report_date', date('Y-m-d')) }}"
                                     required>
+                                <input type="text" 
+                                    id="report_date_display"
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base" 
+                                    readonly>
                             </div>
 
                             <!-- Kode Project -->
@@ -202,6 +208,34 @@
             if (document.getElementById('work-details').children.length === 0) {
                 addWorkDetail();
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('report_date');
+            const dateDisplay = document.getElementById('report_date_display');
+            
+            // Format tanggal untuk tampilan
+            function formatDate(date) {
+                const options = { 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric'
+                };
+                return new Date(date).toLocaleDateString('id-ID', options);
+            }
+
+            // Update tampilan saat halaman dimuat
+            dateDisplay.value = formatDate(dateInput.value);
+
+            // Tampilkan date picker saat input display diklik
+            dateDisplay.addEventListener('click', function() {
+                dateInput.showPicker();
+            });
+
+            // Update tampilan saat tanggal dipilih
+            dateInput.addEventListener('change', function() {
+                dateDisplay.value = formatDate(this.value);
+            });
         });
     </script>
     @endpush

@@ -186,30 +186,23 @@
                     </div>
 
                     <!-- Pekerja Yang Belum Laporan Section -->
-                    @if(auth()->user()->isAdmin() && count($workersWithoutReport) > 0)
+                    @if(auth()->user()->isAdmin() && count($usersWithoutReport) > 0)
                         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                             <div class="p-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <h3 class="text-lg font-semibold text-gray-900">Belum Membuat Laporan Hari Ini</h3>
                                     <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-                                        {{ count($workersWithoutReport) }} Orang
+                                        {{ count($usersWithoutReport) }} Orang
                                     </span>
                                 </div>
                                 
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    @foreach($workersWithoutReport as $worker)
-                                        <div class="flex items-center space-x-3 bg-gray-50 p-4 rounded-lg">
-                                            <div class="flex-shrink-0">
-                                                <div class="w-10 h-10 flex items-center justify-center bg-yellow-100 rounded-full">
-                                                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                    </svg>
-                                                </div>
-                                            </div>
+                                <div class="space-y-3">
+                                    @foreach($usersWithoutReport as $user)
+                                        <div class="flex items-center space-x-3 bg-white p-3 rounded-lg shadow-sm">
+                                            <img src="{{ $user['avatar_url'] }}" alt="Avatar" class="h-10 w-10 rounded-full">
                                             <div>
-                                                <p class="text-sm font-medium text-gray-900">{{ $worker->name }}</p>
-                                                <p class="text-xs text-gray-500">Belum laporan</p>
+                                                <div class="font-medium text-gray-900">{{ $user['name'] }}</div>
+                                                <div class="text-sm text-gray-500">{{ $user['email'] }}</div>
                                             </div>
                                         </div>
                                     @endforeach

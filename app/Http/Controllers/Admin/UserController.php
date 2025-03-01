@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -102,7 +103,39 @@ class UserController extends Controller
     {
         return view('profile.edit', [
             'user' => $user,
-            'canUpdateRole' => true // Flag untuk menandai bahwa ini admin yang edit
+            'canUpdateRole' => true
         ]);
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'homebase' => ['required', 'string', 'max:255'],
+            'avatar' => ['nullable', 'image', 'max:1024'],
+            'signature' => ['nullable', 'image', 'max:1024'],
+        ]);
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar_path) {
+                Storage::disk('public')->delete($user->avatar_path);
+            }
+            $user->avatar_path = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        if ($request->hasFile('signature')) {
+            if ($user->signature_path) {
+                Storage::disk('public')->delete($user->signature_path);
+            }
+            $user->signature_path = $request->file('signature')->store('signatures', 'public');
+        }
+
+        $user->update([
+            'name' => $request->name,
+            'homebase' => $request->homebase,
+        ]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User berhasil diupdate');
     }
 } 
