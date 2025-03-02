@@ -198,10 +198,16 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($reports as $report)
-                                    <tr>
+                                    <tr x-data="{ showDeleteModal: false }">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm text-gray-900">{{ $report->report_date->format('d/m/Y') }}</div>
-                                            <div class="text-xs text-gray-500">{{ $report->created_at->diffForHumans() }}</div>
+                                            <div class="text-xs text-gray-500">
+                                                @if($report->created_at == $report->updated_at)
+                                                    {{ $report->created_at->diffForHumans() }}
+                                                @else
+                                                    Diedit {{ $report->updated_at->diffForHumans() }}
+                                                @endif
+                                            </div>
                                         </td>
                                         @if(auth()->user()->isAdmin())
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->user->name }}</td>
@@ -241,10 +247,52 @@
                                                 @endcan
                                                 @can('delete', $report)
                                                     <button type="button"
-                                                        @click="showModal = true" 
+                                                        @click="showDeleteModal = true" 
                                                         class="text-red-600 hover:text-red-800">
                                                         Hapus
                                                     </button>
+
+                                                    <!-- Delete Confirmation Modal -->
+                                                    <div x-show="showDeleteModal" 
+                                                        class="fixed inset-0 z-50 overflow-y-auto" 
+                                                        style="display: none;">
+                                                        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                                                            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                                                                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                                                            </div>
+                                                            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                                                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                                                    <div class="sm:flex sm:items-start">
+                                                                        <div class="mt-3 text-center sm:mt-0 sm:text-left">
+                                                                            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                                                                Konfirmasi Hapus
+                                                                            </h3>
+                                                                            <div class="mt-2">
+                                                                                <p class="text-sm text-gray-500">
+                                                                                    Apakah Anda yakin ingin menghapus laporan ini?
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                                                    <form action="{{ route('reports.destroy', $report) }}" method="POST">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit"
+                                                                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                                                            Hapus
+                                                                        </button>
+                                                                    </form>
+                                                                    <button type="button" 
+                                                                        @click="showDeleteModal = false"
+                                                                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                                                        Batal
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 @endcan
                                             </div>
                                         </td>
@@ -259,13 +307,19 @@
             <!-- Mobile View (Hidden on Desktop) -->
             <div class="md:hidden space-y-4">
                 @foreach($reports as $report)
-                    <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div x-data="{ showDeleteModal: false }" class="bg-white overflow-hidden shadow-sm rounded-lg">
                         <div class="p-4 space-y-3">
                             <!-- Header -->
                             <div class="flex justify-between items-start">
                                 <div>
                                     <div class="text-sm font-medium text-gray-900">{{ $report->report_date->format('d/m/Y') }}</div>
-                                    <div class="text-xs text-gray-500">{{ $report->created_at->diffForHumans() }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        @if($report->created_at == $report->updated_at)
+                                            {{ $report->created_at->diffForHumans() }}
+                                        @else
+                                            Diedit {{ $report->updated_at->diffForHumans() }}
+                                        @endif
+                                    </div>
                                 </div>
                                 @if(auth()->user()->isAdmin())
                                     <div class="text-sm text-gray-600">{{ $report->user->name }}</div>
@@ -332,73 +386,49 @@
                                     </a>
                                 @endcan
                                 @can('delete', $report)
-                                    <!-- Delete Button and Modal -->
-                                    <div x-data="{ showModal: false }">
-                                        <button @click="showModal = true" 
-                                            class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-md text-sm font-medium hover:bg-red-100">
-                                            <span>Hapus</span>
-                                        </button>
+                                    <button type="button"
+                                        @click="showDeleteModal = true"
+                                        class="text-red-600 hover:text-red-800">
+                                        Hapus
+                                    </button>
 
-                                        <!-- Modal Backdrop -->
-                                        <div x-show="showModal" 
-                                            x-transition:enter="transition ease-out duration-300"
-                                            x-transition:enter-start="opacity-0"
-                                            x-transition:enter-end="opacity-100"
-                                            x-transition:leave="transition ease-in duration-200"
-                                            x-transition:leave-start="opacity-100"
-                                            x-transition:leave-end="opacity-0"
-                                            class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center"
-                                            @click="showModal = false">
-
-                                            <!-- Modal Content -->
-                                            <div x-show="showModal" 
-                                                x-transition:enter="transition ease-out duration-300"
-                                                x-transition:enter-start="opacity-0 transform scale-90"
-                                                x-transition:enter-end="opacity-100 transform scale-100"
-                                                x-transition:leave="transition ease-in duration-200"
-                                                x-transition:leave-start="opacity-100 transform scale-100"
-                                                x-transition:leave-end="opacity-0 transform scale-90"
-                                                @click.stop
-                                                class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                                                
-                                                <!-- Modal Header -->
-                                                <div class="p-4 border-b">
-                                                    <h3 class="text-lg font-medium text-gray-900 text-left">Konfirmasi Penghapusan</h3>
-                                                </div>
-
-                                                <!-- Modal Body -->
-                                                <div class="p-4">
-                                                    <div class="flex items-start mb-4">
-                                                        <div class="flex-shrink-0 bg-red-100 rounded-full p-2 mr-3">
-                                                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                                            </svg>
-                                                        </div>
-                                                        <p class="text-gray-600">Apakah Anda yakin ingin menghapus laporan ini?</p>
-                                                    </div>
-                                                    <div class="text-sm text-gray-500 bg-gray-50 rounded p-3">
-                                                        <div class="text-left">
-                                                            <p>Tanggal: {{ $report->report_date->format('d/m/Y') }}</p>
-                                                            <p>Project: {{ $report->project_code }}</p>
+                                    <!-- Delete Confirmation Modal (sama seperti di atas) -->
+                                    <div x-show="showDeleteModal" 
+                                        class="fixed inset-0 z-50 overflow-y-auto" 
+                                        style="display: none;">
+                                        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                                            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                                                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                                            </div>
+                                            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                                    <div class="sm:flex sm:items-start">
+                                                        <div class="mt-3 text-center sm:mt-0 sm:text-left">
+                                                            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                                                Konfirmasi Hapus
+                                                            </h3>
+                                                            <div class="mt-2">
+                                                                <p class="text-sm text-gray-500">
+                                                                    Apakah Anda yakin ingin menghapus laporan ini?
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                <!-- Modal Footer -->
-                                                <div class="p-4 border-t flex justify-end space-x-3">
-                                                    <button type="button" @click="showModal = false"
-                                                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
-                                                        Batal
-                                                    </button>
-                                                    <form action="{{ route('reports.destroy', $report) }}" method="POST" class="inline">
+                                                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                                    <form action="{{ route('reports.destroy', $report) }}" method="POST">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" 
-                                                            class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">
-                                                            Hapus Laporan
+                                                        <button type="submit"
+                                                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                                            Hapus
                                                         </button>
                                                     </form>
+                                                    <button type="button" 
+                                                        @click="showDeleteModal = false"
+                                                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                                        Batal
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
