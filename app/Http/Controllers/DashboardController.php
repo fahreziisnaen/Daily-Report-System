@@ -11,6 +11,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $today = Carbon::today();
+        
         // Get recent reports
         $recentReportsQuery = Report::with(['user', 'details'])
             ->latest('report_date');
@@ -24,18 +26,17 @@ class DashboardController extends Controller
         // Get summaries for calendar
         $summaries = collect();
         if (auth()->user()->hasRole('admin')) {
-            $summaries = User::role('employee')
-                ->with(['reports' => function ($query) {
-                    $query->whereMonth('report_date', now()->month)
-                        ->whereYear('report_date', now()->year);
-                }])
-                ->get()
-                ->map(function ($user) {
-                    return (object)[
-                        'user_name' => $user->name,
-                        'reports' => $user->reports
-                    ];
-                });
+            $summaries = User::with(['reports' => function ($query) {
+                $query->whereMonth('report_date', now()->month)
+                    ->whereYear('report_date', now()->year);
+            }])
+            ->get()
+            ->map(function ($user) {
+                return (object)[
+                    'user_name' => $user->name,
+                    'reports' => $user->reports
+                ];
+            });
         } else {
             $summaries->push((object)[
                 'user_name' => auth()->user()->name,
@@ -46,16 +47,31 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Get workers without report today
-        $workersWithoutReport = collect();
-        if (auth()->user()->hasRole('admin')) {
-            $workersWithoutReport = User::role('employee')
-                ->whereDoesntHave('reports', function ($query) {
-                    $query->whereDate('report_date', today());
-                })
-                ->get();
-        }
+        // Get users without report today (including admin)
+        $usersWithoutReport = User::whereDoesntHave('reports', function ($query) use ($today) {
+            $query->whereDate('report_date', $today);
+        })
+        ->get()
+        ->map(function($user) {
+            return [
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar_url' => $user->avatar_url
+            ];
+        });
 
-        return view('dashboard', compact('recentReports', 'summaries', 'workersWithoutReport'));
+        // Hitung statistik
+        $totalReports = Report::count();
+        $monthlyReports = Report::whereMonth('report_date', now()->month)->count();
+        $dailyReports = Report::whereDate('report_date', $today)->count();
+
+        return view('dashboard', compact(
+            'recentReports',
+            'summaries',
+            'usersWithoutReport',
+            'totalReports',
+            'monthlyReports',
+            'dailyReports'
+        ));
     }
 } 
