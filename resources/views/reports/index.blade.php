@@ -201,7 +201,13 @@
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm text-gray-900">{{ $report->report_date->format('d/m/Y') }}</div>
-                                            <div class="text-xs text-gray-500">{{ $report->created_at->diffForHumans() }}</div>
+                                            <div class="text-xs text-gray-500">
+                                                @if($report->created_at == $report->updated_at)
+                                                    {{ $report->created_at->diffForHumans() }}
+                                                @else
+                                                    Diedit {{ $report->updated_at->diffForHumans() }}
+                                                @endif
+                                            </div>
                                         </td>
                                         @if(auth()->user()->isAdmin())
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->user->name }}</td>
@@ -265,7 +271,13 @@
                             <div class="flex justify-between items-start">
                                 <div>
                                     <div class="text-sm font-medium text-gray-900">{{ $report->report_date->format('d/m/Y') }}</div>
-                                    <div class="text-xs text-gray-500">{{ $report->created_at->diffForHumans() }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        @if($report->created_at == $report->updated_at)
+                                            {{ $report->created_at->diffForHumans() }}
+                                        @else
+                                            Diedit {{ $report->updated_at->diffForHumans() }}
+                                        @endif
+                                    </div>
                                 </div>
                                 @if(auth()->user()->isAdmin())
                                     <div class="text-sm text-gray-600">{{ $report->user->name }}</div>
