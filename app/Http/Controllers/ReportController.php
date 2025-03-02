@@ -233,38 +233,88 @@ class ReportController extends Controller
                 }
 
                 // Fill work details
-                $details = $report->details->take(3)->values();
+                $details = $report->details->values();
+                $baseProjectIdRow = 17;
+                $rowShift = 0;
+
+                if ($details->count() > 3) {
+                    $rowShift = $details->count() - 3;
+                    
+                    // Duplikasi row untuk detail tambahan
+                    for ($i = 0; $i < $rowShift; $i++) {
+                        // Clone row 16 untuk setiap detail tambahan
+                        $sheet->insertNewRowBefore(17);
+                        
+                        // Copy style dari row 16 ke row 17
+                        $sourceRange = 'A16:H16';
+                        $targetRange = 'A17:H17';
+                        
+                        // Copy style langsung dari source ke target
+                        $sheet->duplicateStyle(
+                            $sheet->getStyle($sourceRange),
+                            $targetRange
+                        );
+                        
+                        // Copy height dari row 16
+                        $sheet->getRowDimension(17)->setRowHeight(
+                            $sheet->getRowDimension(16)->getRowHeight()
+                        );
+                        
+                        // Copy merged cells jika ada
+                        foreach ($sheet->getMergeCells() as $mergeCell) {
+                            $mergeCellRange = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::extractAllCellReferencesInRange($mergeCell);
+                            if ($mergeCellRange[0][1] == '16') {
+                                $fromRow = $mergeCellRange[0][0] . '17';
+                                $toRow = $mergeCellRange[1][0] . '17';
+                                $sheet->mergeCells($fromRow . ':' . $toRow);
+                            }
+                        }
+                    }
+                }
+
+                // Fill work details dengan format yang konsisten
                 foreach ($details as $index => $detail) {
                     $description = preg_replace('/^Task #\d+:\s*/', '', $detail->description);
                     $description = preg_replace('/ - (Selesai|Dalam Proses|Tertunda|Bermasalah)$/', '', $description);
-                    $sheet->setCellValue('C' . (14 + $index), $description);
+                    $currentRow = 14 + $index;
+                    
+                    // Set value dan pastikan format konsisten
+                    $sheet->setCellValue('C' . $currentRow, $description);
+                    
+                    // Copy format dari template untuk konsistensi
+                    if ($index >= 3) {
+                        $sourceRange = 'A16:H16';
+                        $targetRange = 'A' . $currentRow . ':H' . $currentRow;
+                        
+                        // Copy style langsung dari source ke target
+                        $sheet->duplicateStyle(
+                            $sheet->getStyle($sourceRange),
+                            $targetRange
+                        );
+                    }
                 }
 
-                $sheet->setCellValue('C17', $report->project_code);
-                $sheet->setCellValue('B25', $report->user->name);
-                $sheet->setCellValue('B26', $exportDate);
+                // Sesuaikan posisi Project ID dan elemen lainnya
+                $sheet->setCellValue('C' . ($baseProjectIdRow + $rowShift), $report->project_code);
+                $sheet->setCellValue('B' . ($baseProjectIdRow + 8 + $rowShift), $report->user->name);
+                $sheet->setCellValue('B' . ($baseProjectIdRow + 9 + $rowShift), $exportDate);
 
                 // Tambahkan border bottom untuk cell tanda tangan
-                $sheet->getStyle('B25')->getBorders()->getBottom()->setBorderStyle(
+                $sheet->getStyle('B' . ($baseProjectIdRow + 8 + $rowShift))->getBorders()->getBottom()->setBorderStyle(
                     \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
                 );
 
-                // Jika perlu border yang lebih tebal, gunakan BORDER_MEDIUM
-                // $sheet->getStyle('B25')->getBorders()->getBottom()->setBorderStyle(
-                //     \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM
-                // );
-
-                // Add signature if exists
+                // Update posisi tanda tangan
                 if ($report->user->signature_path && file_exists(storage_path('app/public/' . $report->user->signature_path))) {
                     $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                     $drawing->setName('Signature');
                     $drawing->setDescription('Signature');
                     $drawing->setPath(storage_path('app/public/' . $report->user->signature_path));
-                    $drawing->setCoordinates('B23');      // Tetap di B23
-                    $drawing->setWidth(200);              // Ukuran tetap 200
-                    $drawing->setHeight(80);              // Ukuran tetap 80
-                    $drawing->setOffsetX(35);             // Tambah offset ke kanan dari 25 ke 35
-                    $drawing->setOffsetY(0);              // Ubah dari -10 ke 0 untuk turun
+                    $drawing->setCoordinates('B' . ($baseProjectIdRow + 6 + $rowShift)); // Sesuaikan posisi tanda tangan
+                    $drawing->setWidth(200);
+                    $drawing->setHeight(80);
+                    $drawing->setOffsetX(35);
+                    $drawing->setOffsetY(0);
                     $drawing->setRotation(0);
                     $drawing->setWorksheet($sheet);
                 }
