@@ -7,17 +7,17 @@
         <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon.ico') }}">
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+            @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="antialiased">
         <div class="relative min-h-screen bg-gradient-to-br from-indigo-100 via-white to-indigo-50">
             <!-- Navigation -->
             <div class="absolute top-0 right-0 p-6 text-right">
-                @auth
+                    @auth
                     <a href="{{ route('dashboard') }}" class="font-semibold text-indigo-600 hover:text-indigo-800 focus:outline focus:outline-2 focus:rounded-sm focus:outline-indigo-500">Dashboard</a>
-                @else
+                    @else
                     <a href="{{ route('login') }}" class="font-semibold text-indigo-600 hover:text-indigo-800 focus:outline focus:outline-2 focus:rounded-sm focus:outline-indigo-500">Masuk</a>
-                @endauth
+                    @endauth
             </div>
 
             <!-- Main Content -->
@@ -65,7 +65,7 @@
                                             Setiap laporan yang kita buat adalah langkah menuju kesempurnaan project.
                                             <span class="block mt-2 font-semibold text-yellow-300">
                                                 "Dokumentasi Rapi, Project Terkawal, Hasil Optimal!"
-                                            </span>
+                            </span>
                                         </p>
                                         
                                         <div class="flex justify-center space-x-2 text-xl">
