@@ -25,6 +25,7 @@ class RekapController extends Controller
 
             foreach($user->reports as $report) {
                 $baseDate = Carbon::parse($report->report_date);
+                $dayOfWeek = $baseDate->dayOfWeek; // 1 = Monday, 6 = Saturday
                 
                 $start = Carbon::parse($report->start_time)->setDateFrom($baseDate);
                 $end = Carbon::parse($report->end_time)->setDateFrom($baseDate);
@@ -32,32 +33,40 @@ class RekapController extends Controller
                     $end->addDay();
                 }
 
-                $normalStart = Carbon::parse('08:45')->setDateFrom($baseDate);
-                $normalEnd = Carbon::parse('17:00')->setDateFrom($baseDate);
-
                 // Debug log
                 \Log::info('Time calculation for report', [
                     'user' => $user->name,
                     'date' => $baseDate->format('Y-m-d'),
+                    'day_of_week' => $dayOfWeek,
                     'start' => $start->format('Y-m-d H:i'),
-                    'end' => $end->format('Y-m-d H:i'),
-                    'normal_start' => $normalStart->format('Y-m-d H:i'),
-                    'normal_end' => $normalEnd->format('Y-m-d H:i')
+                    'end' => $end->format('Y-m-d H:i')
                 ]);
 
                 // Hitung total jam kerja
-                $totalHours = $start->diffInMinutes($end) / 60;
-                $totalWorkHours += $totalHours;
+                $totalWorkHours += $start->diffInMinutes($end) / 60;
 
                 // Hitung jam lembur
                 if($report->is_overtime) {
-                    $overtimeHours = 0;
-                    if($start->lt($normalStart)) {
-                        $overtimeHours += $start->diffInMinutes($normalStart) / 60;
+                    // Hari Minggu atau status Hari Libur
+                    if($dayOfWeek == 0 || $report->work_day_type === 'Hari Libur') {
+                        // Semua jam dihitung lembur
+                        $overtimeHours = $start->diffInMinutes($end) / 60;
+                    } else {
+                        // Logika normal untuk Senin-Sabtu
+                        $normalStart = Carbon::parse('08:45')->setDateFrom($baseDate);
+                        $normalEnd = Carbon::parse($dayOfWeek == 6 ? '13:00' : '17:00')->setDateFrom($baseDate);
+                        
+                        $overtimeHours = 0;
+                        
+                        // Hitung lembur pagi dan sore
+                        if($start->lt($normalStart)) {
+                            $overtimeHours += $start->diffInMinutes($normalStart) / 60;
+                        }
+                        if($end->gt($normalEnd)) {
+                            $overtimeHours += $normalEnd->diffInMinutes($end) / 60;
+                        }
                     }
-                    if($end->gt($normalEnd)) {
-                        $overtimeHours += $normalEnd->diffInMinutes($end) / 60;
-                    }
+                    
                     $totalOvertimeHours += $overtimeHours;
                 }
             }
