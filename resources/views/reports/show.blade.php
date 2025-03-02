@@ -97,66 +97,63 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6 space-y-6">
                     <!-- Basic Information -->
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Pekerjaan</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Dasar</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Tanggal</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $report->report_date->format('d/m/Y') }}</p>
+                                <div class="text-sm font-medium text-gray-500">Tanggal</div>
+                                <div class="mt-1">{{ $report->report_date->format('d/m/Y') }}</div>
                             </div>
-                            
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Kode Project</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $report->project_code }}</p>
+                                <div class="text-sm font-medium text-gray-500">Pekerja</div>
+                                <div class="mt-1">{{ $report->user->name }}</div>
                             </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-500">Project</div>
+                                <div class="mt-1">{{ $report->project_code }}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-500">Lokasi</div>
+                                <div class="mt-1">{{ $report->location }}</div>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- Time Information -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Waktu</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Lokasi</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $report->location }}</p>
+                                <div class="text-sm font-medium text-gray-500">Waktu Mulai</div>
+                                <div class="mt-1">{{ substr($report->start_time, 0, 5) }}</div>
                             </div>
-
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Kerja Saat</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $report->work_day_type }}</p>
+                                <div class="text-sm font-medium text-gray-500">Waktu Selesai</div>
+                                <div class="mt-1">{{ substr($report->end_time, 0, 5) }}</div>
                             </div>
-
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Waktu Mulai</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $report->start_time }}</p>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Waktu Selesai</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $report->end_time }}</p>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Status</label>
-                                <div class="mt-1">
+                                <div class="text-sm font-medium text-gray-500">Status</div>
+                                <div class="mt-1 flex gap-2">
+                                    @if($report->is_overtime)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            Overtime
+                                        </span>
+                                    @endif
                                     @if($report->is_overnight)
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                             Overnight
                                         </span>
                                     @endif
-                                    @if($report->is_overtime)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2">
-                                            Overtime
-                                        </span>
-                                    @endif
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $report->work_day_type === 'Hari Libur' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                        {{ $report->work_day_type }}
+                                    </span>
                                 </div>
                             </div>
-
-                            @if(auth()->user()->hasRole('admin'))
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500">Karyawan</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $report->user->name }}</dd>
-                            </div>
-                            @endif
                         </div>
                     </div>
 
@@ -182,10 +179,24 @@
                         </div>
                     </div>
 
+                    <!-- Timestamps -->
+                    <div class="border-t pt-4 mt-6">
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <div>
+                                Dibuat: {{ $report->created_at->format('d/m/Y H:i') }}
+                            </div>
+                            @if($report->created_at != $report->updated_at)
+                                <div>
+                                    Terakhir diupdate: {{ $report->updated_at->format('d/m/Y H:i') }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
                     <!-- Back Button -->
-                    <div class="flex justify-end">
+                    <div class="flex justify-end pt-4">
                         <a href="{{ route('reports.index') }}" 
-                            class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-400">
+                            class="inline-flex items-center px-4 py-2 bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-300">
                             {{ __('Kembali') }}
                         </a>
                     </div>

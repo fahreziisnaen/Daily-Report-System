@@ -59,16 +59,31 @@ class ReportController extends Controller
         return view('reports.create');
     }
 
-    private function isOvertime($start_time, $end_time, $is_overnight = false)
+    private function isOvertime($start_time, $end_time, $is_overnight = false, $work_day_type = 'Hari Kerja', $report_date = null)
     {
+        // Gunakan report_date dari parameter atau hari ini jika null
+        $date = $report_date ? Carbon::parse($report_date) : Carbon::today();
+        $dayOfWeek = $date->dayOfWeek;
+
+        // Hari Minggu (0) otomatis dianggap lembur
+        if ($dayOfWeek == 0) {
+            return true;
+        }
+
+        // Cek status Hari Libur (hanya berlaku untuk Senin-Sabtu)
+        if ($work_day_type === 'Hari Libur' && $dayOfWeek != 0) {
+            return true;
+        }
+
         $normal_start = '08:45';
-        $normal_end = '17:00';
+        // Jam pulang berbeda untuk hari Sabtu
+        $normal_end = ($dayOfWeek == 6) ? '13:00' : '17:00';
         
         // Convert times untuk perbandingan
         $start = substr($start_time, 0, 5);
         $end = substr($end_time, 0, 5);
 
-        // Jika overnight, otomatis overtime karena melewati jam normal
+        // Jika overnight, otomatis overtime
         if ($is_overnight) {
             return true;
         }
@@ -94,7 +109,9 @@ class ReportController extends Controller
         $is_overtime = $this->isOvertime(
             $request->start_time, 
             $request->end_time,
-            $request->boolean('is_overnight')
+            $request->boolean('is_overnight'),
+            $request->work_day_type,
+            $request->report_date
         );
 
         $report = Report::create([
@@ -150,7 +167,9 @@ class ReportController extends Controller
         $is_overtime = $this->isOvertime(
             $request->start_time, 
             $request->end_time,
-            $request->boolean('is_overnight')
+            $request->boolean('is_overnight'),
+            $request->work_day_type,
+            $request->report_date
         );
 
         $report->update([
@@ -206,22 +225,15 @@ class ReportController extends Controller
             $exportDate = 'Tgl. ' . $reportDate->isoFormat('D MMMM Y');
 
             // Waktu normal
+            $dayOfWeek = $reportDate->dayOfWeek;
             $normalStart = '08:45';
-            $normalEnd = '17:00';
+            $normalEnd = ($dayOfWeek == 6) ? '13:00' : '17:00';
             
             // Convert times untuk perbandingan
             $startTime = substr($report->start_time, 0, 5);
             $endTime = substr($report->end_time, 0, 5);
             
-            // Handle overnight case
-            if ($report->is_overnight) {
-                // Jika overnight, anggap waktu selesai lebih besar dari 17:00
-                $isAfterNormalEnd = true;
-            } else {
-                $isAfterNormalEnd = $endTime > $normalEnd;
-            }
-
-            // Fungsi untuk mengisi sheet
+            // Function untuk mengisi sheet
             $fillSheet = function($sheet, $start, $end) use ($report, $dayDate, $exportDate) {
                 // Set checkbox berdasarkan work_day_type
                 if ($report->work_day_type === 'Hari Kerja') {
@@ -338,16 +350,24 @@ class ReportController extends Controller
                 }
             };
 
-            // Sheet 1 - Dari Pagi
-            if ($startTime < $normalStart) {
-                $sheet1 = $spreadsheet->getSheet(0); // "Dari Pagi" sheet
-                $fillSheet($sheet1, $startTime, $normalStart);
-            }
+            // Logika export berdasarkan tipe hari dan status
+            if ($report->work_day_type === 'Hari Libur' || $dayOfWeek == 0) {
+                // Jika hari libur atau Minggu, semua jam dihitung lembur
+                $sheet1 = $spreadsheet->getSheet(0);
+                $fillSheet($sheet1, $startTime, $endTime);
+            } else {
+                // Untuk hari kerja normal
+                if ($startTime < $normalStart) {
+                    // Lembur pagi
+                    $sheet1 = $spreadsheet->getSheet(0);
+                    $fillSheet($sheet1, $startTime, $normalStart);
+                }
 
-            // Sheet 2 - Dari Sore
-            if ($isAfterNormalEnd) {
-                $sheet2 = $spreadsheet->getSheet(1); // "Dari Sore" sheet
-                $fillSheet($sheet2, $normalEnd, $endTime);
+                if ($endTime > $normalEnd || $report->is_overnight) {
+                    // Lembur sore/malam
+                    $sheet2 = $spreadsheet->getSheet(1);
+                    $fillSheet($sheet2, $normalEnd, $endTime);
+                }
             }
 
             // Set header untuk download
