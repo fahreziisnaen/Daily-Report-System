@@ -59,12 +59,22 @@ class ReportController extends Controller
         return view('reports.create');
     }
 
-    private function isOvertime($start_time, $end_time)
+    private function isOvertime($start_time, $end_time, $is_overnight = false)
     {
         $normal_start = '08:45';
         $normal_end = '17:00';
         
-        return $start_time < $normal_start || $end_time > $normal_end;
+        // Convert times untuk perbandingan
+        $start = substr($start_time, 0, 5);
+        $end = substr($end_time, 0, 5);
+
+        // Jika overnight, otomatis overtime karena melewati jam normal
+        if ($is_overnight) {
+            return true;
+        }
+
+        // Cek overtime berdasarkan start time atau end time
+        return $start < $normal_start || $end > $normal_end;
     }
 
     public function store(Request $request)
@@ -81,7 +91,11 @@ class ReportController extends Controller
             'work_details.*.status' => 'required|in:Selesai,Dalam Proses,Tertunda,Bermasalah',
         ]);
 
-        $is_overtime = $this->isOvertime($request->start_time, $request->end_time);
+        $is_overtime = $this->isOvertime(
+            $request->start_time, 
+            $request->end_time,
+            $request->boolean('is_overnight')
+        );
 
         $report = Report::create([
             'user_id' => auth()->id(),
@@ -133,7 +147,11 @@ class ReportController extends Controller
             'work_details.*.status' => 'required|in:Selesai,Dalam Proses,Tertunda,Bermasalah',
         ]);
 
-        $is_overtime = $this->isOvertime($request->start_time, $request->end_time);
+        $is_overtime = $this->isOvertime(
+            $request->start_time, 
+            $request->end_time,
+            $request->boolean('is_overnight')
+        );
 
         $report->update([
             'report_date' => $validated['report_date'],
