@@ -25,48 +25,59 @@ class RekapController extends Controller
 
             foreach($user->reports as $report) {
                 $baseDate = Carbon::parse($report->report_date);
-                $dayOfWeek = $baseDate->dayOfWeek; // 1 = Monday, 6 = Saturday
+                $dayOfWeek = $baseDate->dayOfWeek;
                 
                 $start = Carbon::parse($report->start_time)->setDateFrom($baseDate);
                 $end = Carbon::parse($report->end_time)->setDateFrom($baseDate);
+                
                 if($report->is_overnight) {
                     $end->addDay();
                 }
 
-                // Debug log
-                \Log::info('Time calculation for report', [
-                    'user' => $user->name,
-                    'date' => $baseDate->format('Y-m-d'),
-                    'day_of_week' => $dayOfWeek,
-                    'start' => $start->format('Y-m-d H:i'),
-                    'end' => $end->format('Y-m-d H:i')
-                ]);
+                // Definisikan jam kerja normal
+                $normalStart = Carbon::parse('08:45')->setDateFrom($baseDate);
+                $normalEnd = Carbon::parse($dayOfWeek == 6 ? '13:00' : '17:00')->setDateFrom($baseDate);
 
-                // Hitung total jam kerja
-                $totalWorkHours += $start->diffInMinutes($end) / 60;
+                // Hitung jam kerja dan lembur
+                if($report->work_day_type === 'Hari Libur' || $dayOfWeek == 0) {
+                    // Untuk hari libur/minggu:
+                    // - Semua jam masuk hitungan lembur
+                    // - Tidak ada jam kerja normal
+                    $totalWorkHours += 0;
+                    $overtimeHours = $start->diffInMinutes($end) / 60;
+                    $totalOvertimeHours += $overtimeHours;
+                } else {
+                    // Untuk hari kerja normal:
+                    // 1. Hitung jam kerja normal (08:45 - 17:00 atau 13:00 untuk Sabtu)
+                    $workStart = $start->copy();
+                    $workEnd = $end->copy();
 
-                // Hitung jam lembur
-                if($report->is_overtime) {
-                    // Hari Minggu atau status Hari Libur
-                    if($dayOfWeek == 0 || $report->work_day_type === 'Hari Libur') {
-                        // Semua jam dihitung lembur
-                        $overtimeHours = $start->diffInMinutes($end) / 60;
-                    } else {
-                        // Logika normal untuk Senin-Sabtu
-                        $normalStart = Carbon::parse('08:45')->setDateFrom($baseDate);
-                        $normalEnd = Carbon::parse($dayOfWeek == 6 ? '13:00' : '17:00')->setDateFrom($baseDate);
-                        
-                        $overtimeHours = 0;
-                        
-                        // Hitung lembur pagi dan sore
-                        if($start->lt($normalStart)) {
-                            $overtimeHours += $start->diffInMinutes($normalStart) / 60;
-                        }
-                        if($end->gt($normalEnd)) {
-                            $overtimeHours += $normalEnd->diffInMinutes($end) / 60;
-                        }
+                    // Sesuaikan waktu kerja ke jam normal jika di luar jam normal
+                    if($workStart->lt($normalStart)) {
+                        $workStart = $normalStart->copy();
                     }
-                    
+                    if($workEnd->gt($normalEnd)) {
+                        $workEnd = $normalEnd->copy();
+                    }
+
+                    // Hitung total jam kerja normal
+                    if($workEnd->gt($workStart)) {
+                        $totalWorkHours += $workStart->diffInMinutes($workEnd) / 60;
+                    }
+
+                    // 2. Hitung jam lembur
+                    $overtimeHours = 0;
+
+                    // Lembur pagi (sebelum jam normal)
+                    if($start->lt($normalStart)) {
+                        $overtimeHours += $start->diffInMinutes($normalStart) / 60;
+                    }
+
+                    // Lembur sore (setelah jam normal)
+                    if($end->gt($normalEnd)) {
+                        $overtimeHours += $normalEnd->diffInMinutes($end) / 60;
+                    }
+
                     $totalOvertimeHours += $overtimeHours;
                 }
             }
