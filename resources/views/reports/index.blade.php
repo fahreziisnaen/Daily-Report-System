@@ -1,12 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-white leading-tight">
                 {{ __('Daftar Laporan Pekerjaan') }}
             </h2>
             <a href="{{ route('reports.create') }}" 
-                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
-                {{ __('Buat Laporan') }}
+                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                {{ __('BUAT LAPORAN') }}
             </a>
         </div>
     </x-slot>
