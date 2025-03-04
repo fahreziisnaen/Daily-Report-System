@@ -173,10 +173,9 @@ class ReportController extends Controller
             $request->report_date
         );
 
-        // Mulai transaction untuk memastikan semua perubahan tersimpan
         DB::beginTransaction();
         try {
-            // Update report dengan touch() untuk memastikan updated_at berubah
+            // Update report dengan waktu Asia/Jakarta
             $report->update([
                 'report_date' => $validated['report_date'],
                 'project_code' => $validated['project_code'],
@@ -188,7 +187,10 @@ class ReportController extends Controller
                 'work_day_type' => $request->work_day_type,
                 'updated_by' => auth()->id(),
             ]);
-            $report->touch(); // Memaksa update timestamp
+
+            // Set timezone ke Asia/Jakarta sebelum touch
+            date_default_timezone_set('Asia/Jakarta');
+            $report->touch();
 
             // Update work details
             $report->details()->delete();
