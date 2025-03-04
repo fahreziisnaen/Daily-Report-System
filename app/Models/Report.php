@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Report extends Model
 {
+    public $timestamps = true;
+
     protected $fillable = [
         'user_id',
         'report_date',
@@ -17,7 +19,8 @@ class Report extends Model
         'end_time',
         'is_overnight',
         'is_overtime',
-        'work_day_type'
+        'work_day_type',
+        'updated_by'
     ];
 
     protected $casts = [
@@ -34,5 +37,15 @@ class Report extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 } 
