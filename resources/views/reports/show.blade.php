@@ -184,14 +184,14 @@
                         <div class="flex flex-col space-y-2 text-sm text-gray-500">
                             <div class="flex justify-between">
                                 <div>
-                                    Dibuat: {{ $report->created_at->format('d/m/Y H:i') }}
+                                    Dibuat: {{ $report->created_at->setTimezone('Asia/Jakarta')->format('d/m/Y H:i') }}
                                     oleh {{ $report->user->name }}
                                 </div>
                             </div>
                             @if($report->created_at != $report->updated_at)
                                 <div class="flex justify-between">
                                     <div>
-                                        Terakhir diupdate: {{ $report->updated_at->format('d/m/Y H:i') }}
+                                        Terakhir diupdate: {{ $report->updated_at->setTimezone('Asia/Jakarta')->format('d/m/Y H:i') }}
                                         oleh {{ $report->updater ? $report->updater->name : 'Unknown' }}
                                     </div>
                                 </div>
