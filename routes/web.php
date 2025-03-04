@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
+        Route::get('/rekap/export/{user}', [RekapController::class, 'export'])->name('rekap.export');
     });
 
     // Employee routes

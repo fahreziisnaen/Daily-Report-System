@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -172,28 +173,40 @@ class ReportController extends Controller
             $request->report_date
         );
 
-        $report->update([
-            'report_date' => $validated['report_date'],
-            'project_code' => $validated['project_code'],
-            'location' => $validated['location'],
-            'start_time' => $validated['start_time'],
-            'end_time' => $validated['end_time'],
-            'is_overnight' => $request->boolean('is_overnight'),
-            'is_overtime' => $is_overtime,
-            'work_day_type' => $request->work_day_type,
-        ]);
-
-        // Update work details
-        $report->details()->delete(); // Delete existing details
-        foreach ($validated['work_details'] as $detail) {
-            $report->details()->create([
-                'description' => $detail['description'],
-                'status' => $detail['status'],
+        // Mulai transaction untuk memastikan semua perubahan tersimpan
+        DB::beginTransaction();
+        try {
+            // Update report dengan touch() untuk memastikan updated_at berubah
+            $report->update([
+                'report_date' => $validated['report_date'],
+                'project_code' => $validated['project_code'],
+                'location' => $validated['location'],
+                'start_time' => $validated['start_time'],
+                'end_time' => $validated['end_time'],
+                'is_overnight' => $request->boolean('is_overnight'),
+                'is_overtime' => $is_overtime,
+                'work_day_type' => $request->work_day_type,
+                'updated_by' => auth()->id(),
             ]);
-        }
+            $report->touch(); // Memaksa update timestamp
 
-        return redirect()->route('reports.show', $report)
-            ->with('success', 'Laporan berhasil diperbarui.');
+            // Update work details
+            $report->details()->delete();
+            foreach ($validated['work_details'] as $detail) {
+                $report->details()->create([
+                    'description' => $detail['description'],
+                    'status' => $detail['status'],
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('reports.show', $report)
+                ->with('success', 'Laporan berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Gagal memperbarui laporan: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Report $report)
@@ -253,84 +266,31 @@ class ReportController extends Controller
 
                 // Set checkbox dan lokasi berdasarkan perbandingan lokasi
                 if ($report->location === $report->user->homebase) {
-                    $sheet->setCellValue('C12', '☑'); // Homebase checked
-                    $sheet->setCellValue('C13', '☐'); // Lokasi Dinas unchecked
-                    $sheet->setCellValue('E13', ''); // Kosongkan lokasi dinas
+                    $sheet->setCellValue('C12', '☑');
+                    $sheet->setCellValue('C13', '☐');
+                    $sheet->setCellValue('E13', '');
                 } else {
-                    $sheet->setCellValue('C12', '☐'); // Homebase unchecked
-                    $sheet->setCellValue('C13', '☑'); // Lokasi Dinas checked
-                    $sheet->setCellValue('E13', $report->location); // Isi lokasi dinas
+                    $sheet->setCellValue('C12', '☐');
+                    $sheet->setCellValue('C13', '☑');
+                    $sheet->setCellValue('E13', $report->location);
                 }
 
-                // Fill work details
-                $details = $report->details->values();
-                $baseProjectIdRow = 17;
-                $rowShift = 0;
-
-                if ($details->count() > 3) {
-                    $rowShift = $details->count() - 3;
-                    
-                    // Duplikasi row untuk detail tambahan
-                    for ($i = 0; $i < $rowShift; $i++) {
-                        // Clone row 16 untuk setiap detail tambahan
-                        $sheet->insertNewRowBefore(17);
-                        
-                        // Copy style dari row 16 ke row 17
-                        $sourceRange = 'A16:H16';
-                        $targetRange = 'A17:H17';
-                        
-                        // Copy style langsung dari source ke target
-                        $sheet->duplicateStyle(
-                            $sheet->getStyle($sourceRange),
-                            $targetRange
-                        );
-                        
-                        // Copy height dari row 16
-                        $sheet->getRowDimension(17)->setRowHeight(
-                            $sheet->getRowDimension(16)->getRowHeight()
-                        );
-                        
-                        // Copy merged cells jika ada
-                        foreach ($sheet->getMergeCells() as $mergeCell) {
-                            $mergeCellRange = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::extractAllCellReferencesInRange($mergeCell);
-                            if ($mergeCellRange[0][1] == '16') {
-                                $fromRow = $mergeCellRange[0][0] . '17';
-                                $toRow = $mergeCellRange[1][0] . '17';
-                                $sheet->mergeCells($fromRow . ':' . $toRow);
-                            }
-                        }
-                    }
-                }
-
-                // Fill work details dengan format yang konsisten
+                // Fill work details (maksimal 3)
+                $details = $report->details->take(3)->values();
                 foreach ($details as $index => $detail) {
                     $description = preg_replace('/^Task #\d+:\s*/', '', $detail->description);
                     $description = preg_replace('/ - (Selesai|Dalam Proses|Tertunda|Bermasalah)$/', '', $description);
                     $currentRow = 14 + $index;
-                    
-                    // Set value dan pastikan format konsisten
                     $sheet->setCellValue('C' . $currentRow, $description);
-                    
-                    // Copy format dari template untuk konsistensi
-                    if ($index >= 3) {
-                        $sourceRange = 'A16:H16';
-                        $targetRange = 'A' . $currentRow . ':H' . $currentRow;
-                        
-                        // Copy style langsung dari source ke target
-                        $sheet->duplicateStyle(
-                            $sheet->getStyle($sourceRange),
-                            $targetRange
-                        );
-                    }
                 }
 
-                // Sesuaikan posisi Project ID dan elemen lainnya
-                $sheet->setCellValue('C' . ($baseProjectIdRow + $rowShift), $report->project_code);
-                $sheet->setCellValue('B' . ($baseProjectIdRow + 8 + $rowShift), $report->user->name);
-                $sheet->setCellValue('B' . ($baseProjectIdRow + 9 + $rowShift), $exportDate);
+                // Project ID dan tanda tangan tetap di posisi yang sama
+                $sheet->setCellValue('C17', $report->project_code);
+                $sheet->setCellValue('B25', $report->user->name);
+                $sheet->setCellValue('B26', $exportDate);
 
                 // Tambahkan border bottom untuk cell tanda tangan
-                $sheet->getStyle('B' . ($baseProjectIdRow + 8 + $rowShift))->getBorders()->getBottom()->setBorderStyle(
+                $sheet->getStyle('B25')->getBorders()->getBottom()->setBorderStyle(
                     \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
                 );
 
@@ -340,7 +300,7 @@ class ReportController extends Controller
                     $drawing->setName('Signature');
                     $drawing->setDescription('Signature');
                     $drawing->setPath(storage_path('app/public/' . $report->user->signature_path));
-                    $drawing->setCoordinates('B' . ($baseProjectIdRow + 6 + $rowShift)); // Sesuaikan posisi tanda tangan
+                    $drawing->setCoordinates('B23');
                     $drawing->setWidth(200);
                     $drawing->setHeight(80);
                     $drawing->setOffsetX(35);

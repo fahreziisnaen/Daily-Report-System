@@ -54,6 +54,9 @@
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Jumlah Laporan
                                     </th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Aksi
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -63,6 +66,16 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $user['total_work_hours'] }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $user['total_overtime_hours'] }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $user['report_count'] }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                            <a href="{{ route('admin.rekap.export', ['user' => $user['id'], 'month' => $month, 'year' => $year]) }}" 
+                                                class="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-100">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                </svg>
+                                                Export Excel
+                                            </a>
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -91,6 +104,16 @@
                                 <span class="text-sm text-gray-500">Jumlah Laporan</span>
                                 <span class="text-sm font-medium text-gray-900">{{ $user['report_count'] }}</span>
                             </div>
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <a href="{{ route('admin.rekap.export', ['user' => $user['id'], 'month' => $month, 'year' => $year]) }}" 
+                                class="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-100">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Export Excel
+                            </a>
                         </div>
                     </div>
                 @endforeach

@@ -181,13 +181,19 @@
 
                     <!-- Timestamps -->
                     <div class="border-t pt-4 mt-6">
-                        <div class="flex justify-between text-sm text-gray-500">
-                            <div>
-                                Dibuat: {{ $report->created_at->format('d/m/Y H:i') }}
+                        <div class="flex flex-col space-y-2 text-sm text-gray-500">
+                            <div class="flex justify-between">
+                                <div>
+                                    Dibuat: {{ $report->created_at->format('d/m/Y H:i') }}
+                                    oleh {{ $report->user->name }}
+                                </div>
                             </div>
                             @if($report->created_at != $report->updated_at)
-                                <div>
-                                    Terakhir diupdate: {{ $report->updated_at->format('d/m/Y H:i') }}
+                                <div class="flex justify-between">
+                                    <div>
+                                        Terakhir diupdate: {{ $report->updated_at->format('d/m/Y H:i') }}
+                                        oleh {{ $report->updater ? $report->updater->name : 'Unknown' }}
+                                    </div>
                                 </div>
                             @endif
                         </div>
