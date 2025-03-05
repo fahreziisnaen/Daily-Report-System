@@ -4,10 +4,18 @@
             <h2 class="font-semibold text-xl text-gray-800 dark:text-white leading-tight">
                 {{ __('Daftar Laporan Pekerjaan') }}
             </h2>
-            <a href="{{ route('reports.create') }}" 
-                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                {{ __('BUAT LAPORAN') }}
-            </a>
+            <div class="flex space-x-2">
+                @can('admin')
+                <a href="{{ route('admin.projects.index') }}" 
+                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                    {{ __('MANAGE PROJECT') }}
+                </a>
+                @endcan
+                <a href="{{ route('reports.create') }}" 
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    {{ __('BUAT LAPORAN') }}
+                </a>
+            </div>
         </div>
     </x-slot>
 
