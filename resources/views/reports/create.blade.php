@@ -34,10 +34,11 @@
                             <!-- Kode Project -->
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Kode Project</label>
-                                <input type="text" name="project_code" 
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base" 
-                                    value="{{ old('project_code') }}"
+                                <select name="project_code" 
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
                                     required>
+                                    <option value="">Pilih Project</option>
+                                </select>
                             </div>
 
                             <!-- Lokasi -->
@@ -236,6 +237,21 @@
             dateInput.addEventListener('change', function() {
                 dateDisplay.value = formatDate(this.value);
             });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fetch active projects for dropdown
+            fetch('/admin/api/active-projects')
+                .then(response => response.json())
+                .then(projects => {
+                    const projectSelect = document.querySelector('[name="project_code"]');
+                    projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.code;
+                        option.textContent = project.code;  // Hanya tampilkan kode project
+                        projectSelect.appendChild(option);
+                    });
+                });
         });
     </script>
     @endpush

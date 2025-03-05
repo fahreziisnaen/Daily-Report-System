@@ -9,6 +9,7 @@ use App\Models\Report;
 use Illuminate\Http\Request;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RekapController;
+use App\Http\Controllers\Admin\ProjectController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -34,6 +35,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
         Route::get('/rekap/export/{user}', [RekapController::class, 'export'])->name('rekap.export');
+        Route::resource('projects', ProjectController::class);
+        Route::get('/api/active-projects', [ProjectController::class, 'getActiveProjects']);
     });
 
     // Employee routes
