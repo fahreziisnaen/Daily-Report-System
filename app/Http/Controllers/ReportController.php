@@ -66,31 +66,36 @@ class ReportController extends Controller
         $date = $report_date ? Carbon::parse($report_date) : Carbon::today();
         $dayOfWeek = $date->dayOfWeek;
 
-        // Hari Minggu (0) otomatis dianggap lembur
-        if ($dayOfWeek == 0) {
+        // Jika hari Minggu (0) atau hari libur, otomatis overtime
+        if ($dayOfWeek == 0 || $work_day_type === 'Hari Libur') {
             return true;
         }
 
-        // Cek status Hari Libur (hanya berlaku untuk Senin-Sabtu)
-        if ($work_day_type === 'Hari Libur' && $dayOfWeek != 0) {
-            return true;
-        }
-
-        $normal_start = '08:45';
-        // Jam pulang berbeda untuk hari Sabtu
-        $normal_end = ($dayOfWeek == 6) ? '13:00' : '17:00';
-        
         // Convert times untuk perbandingan
-        $start = substr($start_time, 0, 5);
-        $end = substr($end_time, 0, 5);
-
-        // Jika overnight, otomatis overtime
+        $start = Carbon::parse($start_time);
+        $end = Carbon::parse($end_time);
+        
+        // Jika overnight, tambah 1 hari ke end time
         if ($is_overnight) {
-            return true;
+            $end->addDay();
         }
 
-        // Cek overtime berdasarkan start time atau end time
-        return $start < $normal_start || $end > $normal_end;
+        // Hitung total jam kerja dalam menit
+        $totalMinutes = $end->diffInMinutes($start);
+        $totalHours = $totalMinutes / 60;
+
+        // Untuk hari kerja (Senin-Jumat)
+        if ($dayOfWeek >= 1 && $dayOfWeek <= 5) {
+            // Jika total jam kerja lebih dari atau sama dengan 8 jam 15 menit (8.25 jam)
+            return $totalHours >= 8.25;
+        }
+        // Untuk hari Sabtu
+        else if ($dayOfWeek == 6) {
+            // Jika total jam kerja lebih dari atau sama dengan 4 jam 15 menit (4.25 jam)
+            return $totalHours >= 4.25;
+        }
+
+        return false;
     }
 
     public function store(Request $request)
