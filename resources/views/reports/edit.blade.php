@@ -118,13 +118,23 @@
                                 </div>
                             </div>
 
-                            <!-- Overnight -->
-                            <div class="mb-4">
-                                <label class="flex items-center space-x-2 p-2 bg-white rounded-md border border-gray-200">
-                                    <input type="checkbox" name="is_overnight" 
-                                        class="w-5 h-5 rounded text-indigo-600"
-                                        {{ old('is_overnight', $report->is_overnight) ? 'checked' : '' }}>
-                                    <span class="text-sm">Lembur sampai esok hari</span>
+                            <!-- Overnight dan Shift -->
+                            <div class="flex flex-wrap gap-4 mt-4">
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" 
+                                        name="is_overnight" 
+                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" 
+                                        {{ $report->is_overnight ? 'checked' : '' }}>
+                                    <span class="ml-2 text-sm text-gray-600">Overnight (Lanjut hari berikutnya)</span>
+                                </label>
+
+                                <!-- Checkbox Shift -->
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" 
+                                        name="is_shift" 
+                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" 
+                                        {{ $report->is_shift ? 'checked' : '' }}>
+                                    <span class="ml-2 text-sm text-gray-600">Pergantian Shift</span>
                                 </label>
                             </div>
                         </div>

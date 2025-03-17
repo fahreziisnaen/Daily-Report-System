@@ -149,6 +149,11 @@
                                             Overnight
                                         </span>
                                     @endif
+                                    @if($report->is_shift)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            Pergantian Shift
+                                        </span>
+                                    @endif
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $report->work_day_type === 'Hari Libur' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
                                         {{ $report->work_day_type }}
                                     </span>

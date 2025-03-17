@@ -128,6 +128,7 @@ class ReportController extends Controller
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
             'is_overnight' => $request->boolean('is_overnight'),
+            'is_shift' => $request->boolean('is_shift'),
             'is_overtime' => $is_overtime,
             'work_day_type' => $request->work_day_type,
         ]);
@@ -188,6 +189,7 @@ class ReportController extends Controller
                 'start_time' => $validated['start_time'],
                 'end_time' => $validated['end_time'],
                 'is_overnight' => $request->boolean('is_overnight'),
+                'is_shift' => $request->boolean('is_shift'),
                 'is_overtime' => $is_overtime,
                 'work_day_type' => $request->work_day_type,
                 'updated_by' => auth()->id(),

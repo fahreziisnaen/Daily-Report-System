@@ -11,22 +11,22 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 class RekapController extends Controller
 {
     private function calculateHours($report) {
+        // Parse tanggal dan waktu dengan benar
         $baseDate = Carbon::parse($report->report_date);
-        $dayOfWeek = $baseDate->dayOfWeek;
         
-        $start = Carbon::parse($report->start_time)->setDateFrom($baseDate);
-        $end = Carbon::parse($report->end_time)->setDateFrom($baseDate);
+        // Parse waktu mulai dan selesai
+        $start = Carbon::parse($report->report_date)->setTimeFromTimeString($report->start_time);
+        $end = Carbon::parse($report->report_date)->setTimeFromTimeString($report->end_time);
         
         if($report->is_overnight) {
             $end->addDay();
         }
 
-        // Total durasi kerja dalam menit
-        $totalMinutes = $end->diffInMinutes($start);
-        $totalHours = $totalMinutes / 60;
+        // Total durasi kerja dalam jam
+        $totalHours = $end->diffInMinutes($start) / 60;
 
         // Jika hari libur atau Minggu, semua jam dihitung sebagai lembur
-        if($report->work_day_type === 'Hari Libur' || $dayOfWeek == 0) {
+        if($report->work_day_type === 'Hari Libur' || $baseDate->dayOfWeek == 0) {
             return [
                 'workHours' => 0,
                 'overtimeHours' => $totalHours
@@ -34,22 +34,22 @@ class RekapController extends Controller
         }
 
         // Untuk hari kerja (Senin-Jumat)
-        if($dayOfWeek >= 1 && $dayOfWeek <= 5) {
+        if($baseDate->dayOfWeek >= 1 && $baseDate->dayOfWeek <= 5) {
             $normalHours = 8.25; // 8 jam 15 menit
         }
         // Untuk hari Sabtu
-        else if($dayOfWeek == 6) {
+        else {
             $normalHours = 4.25; // 4 jam 15 menit
         }
 
-        // Jika total jam kerja kurang dari jam normal, semuanya masuk jam kerja
+        // Jika total jam kerja kurang dari jam normal
         if($totalHours <= $normalHours) {
             return [
                 'workHours' => $totalHours,
                 'overtimeHours' => 0
             ];
         }
-        // Jika lebih dari jam normal, sisanya dihitung lembur
+        // Jika lebih dari jam normal
         else {
             return [
                 'workHours' => $normalHours,
@@ -81,8 +81,8 @@ class RekapController extends Controller
             return [
                 'id' => $user->id,
                 'name' => $user->name,
-                'total_work_hours' => number_format($totalWorkHours, 2),
-                'total_overtime_hours' => number_format($totalOvertimeHours, 2),
+                'total_work_hours' => number_format(abs($totalWorkHours), 2),
+                'total_overtime_hours' => number_format(abs($totalOvertimeHours), 2),
                 'report_count' => $user->reports->count()
             ];
         });
@@ -120,7 +120,6 @@ class RekapController extends Controller
         $year = $request->get('year', now()->year);
 
         try {
-            // Load template
             $templatePath = storage_path('app/templates/exportlaporan.xlsx');
             if (!file_exists($templatePath)) {
                 throw new \Exception('Template file tidak ditemukan di: ' . $templatePath);
@@ -131,42 +130,40 @@ class RekapController extends Controller
 
             // Set informasi user dan periode
             $sheet->setCellValue('B1', $user->name);
-            $sheet->setCellValue('B2', Carbon::create($year, $month)->format('F Y'));
+            $sheet->setCellValue('B2', Carbon::create($year, $month)->locale('id')->isoFormat('MMMM Y'));
 
             $row = 5; // Mulai dari baris 5
-            $locationStartRow = $row;
-            $currentLocation = null;
 
-            // Ambil semua laporan lembur
+            // Ambil semua laporan (tidak perlu filter is_overtime lagi)
             foreach ($user->reports()
                 ->whereMonth('report_date', $month)
                 ->whereYear('report_date', $year)
-                ->where('is_overtime', true)
                 ->orderBy('report_date')
                 ->get() as $report) {
 
-                // Jika lokasi berubah, update row tracker
-                if ($currentLocation !== $report->location) {
-                    if ($locationStartRow < $row) {
-                        $sheet->mergeCells("E{$locationStartRow}:E" . ($row - 1));
-                    }
-                    $currentLocation = $report->location;
-                    $locationStartRow = $row;
-                }
-
                 // Isi data ke excel
-                $sheet->setCellValue("A{$row}", $row - 4); // Nomor urut
-                $sheet->setCellValue("B{$row}", $report->report_date->format('d-m-Y'));
+                $sheet->setCellValue("A{$row}", $report->report_date->format('d-m-Y'));
+                $sheet->setCellValue("B{$row}", $report->project_code);
                 $sheet->setCellValue("C{$row}", Carbon::parse($report->start_time)->format('H:i'));
                 $sheet->setCellValue("D{$row}", Carbon::parse($report->end_time)->format('H:i'));
                 $sheet->setCellValue("E{$row}", $report->location);
                 
                 // Uraian pekerjaan dari detail laporan
-                $descriptions = $report->details->pluck('description')->implode("\n");
-                $sheet->setCellValue("F{$row}", $descriptions);
+                $details = [];
+                foreach ($report->details as $detail) {
+                    $details[] = $detail->description;
+                }
+                $sheet->setCellValue("F{$row}", implode("\n", $details));
+                
+                // Status pekerjaan
+                $statuses = [];
+                foreach ($report->details as $detail) {
+                    $statuses[] = $detail->status;
+                }
+                $sheet->setCellValue("G{$row}", implode("\n", $statuses));
 
                 // Set style untuk baris
-                $sheet->getStyle("A{$row}:F{$row}")->applyFromArray([
+                $sheet->getStyle("A{$row}:G{$row}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
@@ -174,25 +171,22 @@ class RekapController extends Controller
                     ]
                 ]);
 
-                // Wrap text untuk kolom deskripsi
-                $sheet->getStyle("F{$row}")->getAlignment()->setWrapText(true);
+                // Wrap text untuk kolom deskripsi dan status
+                $sheet->getStyle("F{$row}:G{$row}")->getAlignment()->setWrapText(true);
 
                 $row++;
             }
 
-            // Merge lokasi terakhir jika ada
-            if ($locationStartRow < $row) {
-                $sheet->mergeCells("E{$locationStartRow}:E" . ($row - 1));
-            }
-
             // Auto-size columns
-            foreach (range('A', 'F') as $col) {
+            foreach (range('A', 'G') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
-            // Set header untuk download
+            // Format nama bulan
+            $monthName = Carbon::create($year, $month)->locale('id')->isoFormat('MMMM');
+
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            header('Content-Disposition: attachment;filename="Lembur-' . $user->name . '-' . $year . '-' . $month . '.xlsx"');
+            header('Content-Disposition: attachment;filename="Summary Pekerjaan ' . $user->name . ' - ' . $monthName . ' ' . $year . '.xlsx"');
             header('Cache-Control: max-age=0');
 
             $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');

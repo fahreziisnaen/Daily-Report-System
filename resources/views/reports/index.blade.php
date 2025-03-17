@@ -222,11 +222,11 @@
                                         @endif
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->project_code }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $report->location }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
                                             <div class="text-sm text-gray-900">
                                                 {{ substr($report->start_time, 0, 5) }} - {{ substr($report->end_time, 0, 5) }}
                                             </div>
-                                            <div class="flex gap-1 mt-1">
+                                            <div class="flex flex-wrap gap-1 mt-1">
                                                 @if($report->is_overtime)
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
                                                         Overtime
@@ -237,11 +237,14 @@
                                                         Overnight
                                                     </span>
                                                 @endif
-                                                @if($report->work_day_type === 'Hari Libur')
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                                        Hari Libur
+                                                @if($report->is_shift)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        Pergantian Shift
                                                     </span>
                                                 @endif
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $report->work_day_type === 'Hari Libur' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                                    {{ $report->work_day_type }}
+                                                </span>
                                             </div>
                                         </td>
                                         <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-right">
@@ -368,6 +371,11 @@
                                     @if($report->is_overnight)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
                                             Overnight
+                                        </span>
+                                    @endif
+                                    @if($report->is_shift)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                            Pergantian Shift
                                         </span>
                                     @endif
                                     @if($report->work_day_type === 'Hari Libur')
