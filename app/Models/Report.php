@@ -19,6 +19,7 @@ class Report extends Model
         'end_time',
         'is_overnight',
         'is_overtime',
+        'is_shift',
         'work_day_type',
         'updated_by'
     ];
@@ -27,6 +28,7 @@ class Report extends Model
         'report_date' => 'date',
         'is_overnight' => 'boolean',
         'is_overtime' => 'boolean',
+        'is_shift' => 'boolean',
     ];
 
     public function details(): HasMany
