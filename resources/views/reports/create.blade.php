@@ -19,16 +19,50 @@
                             <!-- Tanggal -->
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                                <input type="date" 
-                                    name="report_date" 
-                                    id="report_date"
-                                    class="hidden" 
-                                    value="{{ old('report_date', date('Y-m-d')) }}"
-                                    required>
-                                <input type="text" 
-                                    id="report_date_display"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base" 
-                                    readonly>
+                                <div class="relative">
+                                    <input type="date" 
+                                        name="report_date" 
+                                        id="report_date"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base" 
+                                        value="{{ old('report_date', date('Y-m-d')) }}"
+                                        required
+                                        onchange="this.setAttribute('data-date', this.value);"
+                                        style="position: relative; height: 38px;"
+                                        data-date="{{ old('report_date', date('Y-m-d')) }}">
+                                    <style>
+                                        input[type="date"]::-webkit-calendar-picker-indicator {
+                                            background: transparent;
+                                            bottom: 0;
+                                            color: transparent;
+                                            cursor: pointer;
+                                            height: 100%;
+                                            left: 0;
+                                            position: absolute;
+                                            right: 0;
+                                            top: 0;
+                                            width: auto;
+                                        }
+                                        input[type="date"]::before {
+                                            content: attr(data-date);
+                                            color: #000000;
+                                            padding: 0.5rem 0.75rem;
+                                            position: absolute;
+                                            left: 0;
+                                            top: 50%;
+                                            transform: translateY(-50%);
+                                        }
+                                        input[type="date"] {
+                                            color: transparent;
+                                            padding: 0.5rem 0.75rem;
+                                            height: 38px;
+                                            display: flex;
+                                            align-items: center;
+                                        }
+                                    </style>
+                                    @error('report_date')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
 
                             <!-- Kode Project -->
@@ -107,12 +141,18 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Kerja Saat</label>
                                 <div class="grid grid-cols-2 gap-4">
                                     <label class="flex items-center space-x-2 p-2 bg-white rounded-md border border-gray-200">
-                                        <input type="radio" name="work_day_type" value="Hari Kerja" 
-                                            class="w-5 h-5 text-indigo-600" checked>
+                                        <input type="radio" 
+                                            name="work_day_type" 
+                                            value="Hari Kerja" 
+                                            id="work_day_type_kerja"
+                                            class="w-5 h-5 text-indigo-600">
                                         <span class="text-sm">Hari Kerja</span>
                                     </label>
                                     <label class="flex items-center space-x-2 p-2 bg-white rounded-md border border-gray-200">
-                                        <input type="radio" name="work_day_type" value="Hari Libur" 
+                                        <input type="radio" 
+                                            name="work_day_type" 
+                                            value="Hari Libur" 
+                                            id="work_day_type_libur"
                                             class="w-5 h-5 text-indigo-600">
                                         <span class="text-sm">Hari Libur</span>
                                     </label>
@@ -215,43 +255,44 @@
             detailCount++;
         }
 
-        // Add first detail automatically
         document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('report_date');
+            const workDayKerja = document.getElementById('work_day_type_kerja');
+            const workDayLibur = document.getElementById('work_day_type_libur');
+            
+            function checkIfSunday(date) {
+                const day = new Date(date).getDay();
+                if (day === 0) { // 0 adalah hari Minggu
+                    workDayLibur.checked = true;
+                } else {
+                    workDayKerja.checked = true;
+                }
+            }
+
+            function formatDateForDisplay(dateString) {
+                if (!dateString) return '';
+                const [year, month, day] = dateString.split('-');
+                return `${day}/${month}/${year}`;
+            }
+
+            // Format tanggal saat halaman dimuat
+            dateInput.setAttribute('data-date', formatDateForDisplay(dateInput.value));
+
+            // Update format dan cek hari Minggu saat tanggal berubah
+            dateInput.addEventListener('change', function() {
+                this.setAttribute('data-date', formatDateForDisplay(this.value));
+                checkIfSunday(this.value);
+            });
+
+            // Cek hari Minggu saat halaman dimuat
+            checkIfSunday(dateInput.value);
+
+            // Add first detail automatically
             if (document.getElementById('work-details').children.length === 0) {
                 addWorkDetail();
             }
-        });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const dateInput = document.getElementById('report_date');
-            const dateDisplay = document.getElementById('report_date_display');
-            
-            // Format tanggal untuk tampilan
-            function formatDate(date) {
-                const options = { 
-                    day: 'numeric', 
-                    month: 'long', 
-                    year: 'numeric'
-                };
-                return new Date(date).toLocaleDateString('id-ID', options);
-            }
-
-            // Update tampilan saat halaman dimuat
-            dateDisplay.value = formatDate(dateInput.value);
-
-            // Tampilkan date picker saat input display diklik
-            dateDisplay.addEventListener('click', function() {
-                dateInput.showPicker();
-            });
-
-            // Update tampilan saat tanggal dipilih
-            dateInput.addEventListener('change', function() {
-                dateDisplay.value = formatDate(this.value);
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Update URL tanpa prefix 'admin'
+            // Fetch active projects
             fetch('/api/active-projects')
                 .then(response => response.json())
                 .then(projects => {
@@ -259,7 +300,7 @@
                     projects.forEach(project => {
                         const option = document.createElement('option');
                         option.value = project.code;
-                        option.textContent = project.code;  // Hanya tampilkan kode project
+                        option.textContent = project.code;
                         projectSelect.appendChild(option);
                     });
                 });
