@@ -251,8 +251,8 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Fetch active projects for dropdown
-            fetch('/admin/api/active-projects')
+            // Update URL tanpa prefix 'admin'
+            fetch('/api/active-projects')
                 .then(response => response.json())
                 .then(projects => {
                     const projectSelect = document.querySelector('[name="project_code"]');
