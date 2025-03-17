@@ -11,13 +11,14 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 class RekapController extends Controller
 {
     private function calculateHours($report) {
-        // Parse tanggal dan waktu dengan benar
+        // Parse tanggal dan waktu
         $baseDate = Carbon::parse($report->report_date);
         
         // Parse waktu mulai dan selesai
         $start = Carbon::parse($report->report_date)->setTimeFromTimeString($report->start_time);
         $end = Carbon::parse($report->report_date)->setTimeFromTimeString($report->end_time);
         
+        // Jika overnight, tambah 1 hari ke waktu selesai
         if($report->is_overnight) {
             $end->addDay();
         }
