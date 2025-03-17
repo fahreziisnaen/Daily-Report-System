@@ -71,14 +71,49 @@
                     </div>
                     @endif
 
-                    <!-- Filter lainnya tetap ditampilkan -->
-                    <div class="flex-1">
-                        <x-input-label for="report_date" :value="__('Tanggal')" />
-                        <input type="date" 
-                            id="report_date"
-                            name="report_date"
-                            value="{{ request('report_date') }}"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <!-- Filter tanggal -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                        <div class="relative">
+                            <input type="date" 
+                                name="report_date" 
+                                id="report_date"
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base date-input" 
+                                value="{{ request('report_date', date('Y-m-d')) }}"
+                                style="position: relative; height: 38px;"
+                                data-date="{{ \Carbon\Carbon::parse(request('report_date', date('Y-m-d')))->format('d/m/Y') }}">
+                            <style>
+                                .date-input::-webkit-calendar-picker-indicator {
+                                    background: transparent;
+                                    bottom: 0;
+                                    color: transparent;
+                                    cursor: pointer;
+                                    height: 100%;
+                                    left: 0;
+                                    position: absolute;
+                                    right: 0;
+                                    top: 0;
+                                    width: auto;
+                                    z-index: 10;
+                                }
+                                .date-input::before {
+                                    content: attr(data-date);
+                                    color: #000000;
+                                    position: absolute;
+                                    left: 0;
+                                    right: 0;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    padding: 0 0.75rem;
+                                    pointer-events: none;
+                                    z-index: 1;
+                                }
+                                .date-input {
+                                    color: transparent !important;
+                                    background: white;
+                                }
+                            </style>
+                        </div>
                     </div>
 
                     <div class="flex-1" x-data="{ 
@@ -477,4 +512,34 @@
             </div>
         </div>
     </div>
-</x-app-layout> 
+</x-app-layout>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('report_date');
+    
+    function formatDateForDisplay(dateString) {
+        if (!dateString) return '';
+        const parts = dateString.split('-');
+        if (parts.length !== 3) return dateString;
+        
+        const year = parts[0];
+        const month = parts[1];
+        const day = parts[2];
+        
+        return `${day}/${month}/${year}`;
+    }
+
+    // Format tanggal saat halaman dimuat
+    if (dateInput.value) {
+        dateInput.setAttribute('data-date', formatDateForDisplay(dateInput.value));
+    }
+
+    // Update format saat tanggal berubah
+    dateInput.addEventListener('change', function() {
+        this.setAttribute('data-date', formatDateForDisplay(this.value));
+    });
+});
+</script>
+@endpush 

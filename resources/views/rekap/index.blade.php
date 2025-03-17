@@ -63,8 +63,8 @@
                                 @foreach($users as $user)
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $user['name'] }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $user['total_work_hours'] }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $user['total_overtime_hours'] }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ \App\Helpers\TimeHelper::formatHoursToHoursMinutes($user['total_work_hours']) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ \App\Helpers\TimeHelper::formatHoursToHoursMinutes($user['total_overtime_hours']) }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $user['report_count'] }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                                             <a href="{{ route('admin.rekap.export', ['user' => $user['id'], 'month' => $month, 'year' => $year]) }}" 
@@ -94,11 +94,11 @@
                         <div class="space-y-3">
                             <div class="flex justify-between items-center">
                                 <span class="text-sm text-gray-500">Total Jam Kerja</span>
-                                <span class="text-sm font-medium text-gray-900">{{ $user['total_work_hours'] }}</span>
+                                <span class="text-sm font-medium text-gray-900">{{ \App\Helpers\TimeHelper::formatHoursToHoursMinutes($user['total_work_hours']) }}</span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span class="text-sm text-gray-500">Total Jam Lembur</span>
-                                <span class="text-sm font-medium text-gray-900">{{ $user['total_overtime_hours'] }}</span>
+                                <span class="text-sm font-medium text-gray-900">{{ \App\Helpers\TimeHelper::formatHoursToHoursMinutes($user['total_overtime_hours']) }}</span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span class="text-sm text-gray-500">Jumlah Laporan</span>

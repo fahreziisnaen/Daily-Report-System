@@ -124,6 +124,17 @@ class ReportController extends Controller
 
     public function store(Request $request)
     {
+        // Cek apakah sudah ada laporan di tanggal yang sama untuk user ini
+        $existingReport = Report::where('user_id', auth()->id())
+            ->where('report_date', $request->report_date)
+            ->first();
+
+        if ($existingReport) {
+            return back()
+                ->withInput()
+                ->withErrors(['report_date' => 'Laporan pada tanggal tersebut sudah ada.']);
+        }
+
         $request->validate([
             'report_date' => 'required|date',
             'project_code' => 'required|string',
