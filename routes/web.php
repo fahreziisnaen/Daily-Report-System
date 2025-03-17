@@ -68,6 +68,9 @@ Route::middleware('auth')->group(function () {
                 ->distinct()
                 ->pluck('project_code');
         });
+
+        // Tambahkan route baru untuk mengambil project aktif
+        Route::get('/api/active-projects', [ProjectController::class, 'getActiveProjects']);
     });
 });
 
