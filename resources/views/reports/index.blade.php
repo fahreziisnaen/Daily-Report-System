@@ -23,24 +23,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Search/Filter Section -->
             <div class="mb-4">
-                <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col sm:flex-row gap-4">
+                <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col sm:flex-row items-end gap-4">
                     @if(auth()->user()->isAdmin())
-                    <div class="flex-1" x-data="{ 
-                        search: '{{ request('employee_search') }}',
-                        items: {{ $employees }},
-                        filteredItems: [],
-                        showDropdown: false,
-                        init() {
-                            this.filteredItems = this.items;
-                            this.$watch('search', (value) => {
-                                this.filteredItems = this.items.filter(item => 
-                                    item.toLowerCase().includes(value.toLowerCase())
-                                );
-                                this.showDropdown = value.length > 0;
-                            });
-                        }
-                    }">
-                        <x-input-label for="employee_search" :value="__('Nama Karyawan')" />
+                    <div class="flex-1">
+                        <x-input-label for="employee_search" :value="__('Nama Karyawan')" class="mb-1" />
                         <div class="relative">
                             <input type="text" 
                                 id="employee_search"
@@ -49,7 +35,7 @@
                                 @focus="showDropdown = true"
                                 @click.away="showDropdown = false"
                                 placeholder="Cari berdasarkan nama karyawan..." 
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-[38px]">
                             
                             <!-- Dropdown -->
                             <div x-show="showDropdown" 
@@ -72,16 +58,19 @@
                     @endif
 
                     <!-- Filter tanggal -->
-                    <div class="mb-4">
+                    <div class="flex-1">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                        <div class="relative">
+                        <div class="relative" x-data="{ 
+                            date: '{{ request('report_date', date('Y-m-d')) }}',
+                            formattedDate: '{{ \Carbon\Carbon::parse(request('report_date', date('Y-m-d')))->format('d/m/Y') }}'
+                        }">
                             <input type="date" 
                                 name="report_date" 
                                 id="report_date"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base date-input" 
-                                value="{{ request('report_date', date('Y-m-d')) }}"
-                                style="position: relative; height: 38px;"
-                                data-date="{{ \Carbon\Carbon::parse(request('report_date', date('Y-m-d')))->format('d/m/Y') }}">
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base date-input h-[38px]" 
+                                x-model="date"
+                                @change="formattedDate = new Date(date).toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'})"
+                                :data-date="formattedDate">
                             <style>
                                 .date-input::-webkit-calendar-picker-indicator {
                                     background: transparent;
@@ -111,28 +100,29 @@
                                 .date-input {
                                     color: transparent !important;
                                     background: white;
+                                    padding: 0.5rem 0.75rem !important;
                                 }
                             </style>
                         </div>
                     </div>
 
-                    <div class="flex-1" x-data="{ 
-                        search: '{{ request('location') }}',
-                        items: {{ $locations }},
-                        filteredItems: [],
-                        showDropdown: false,
-                        init() {
-                            this.filteredItems = this.items;
-                            this.$watch('search', (value) => {
-                                this.filteredItems = this.items.filter(item => 
-                                    item.toLowerCase().includes(value.toLowerCase())
-                                );
-                                this.showDropdown = value.length > 0;
-                            });
-                        }
-                    }">
-                        <x-input-label for="location" :value="__('Lokasi')" />
-                        <div class="relative">
+                    <div class="flex-1">
+                        <x-input-label for="location" :value="__('Lokasi')" class="mb-1" />
+                        <div class="relative" x-data="{ 
+                            search: '{{ request('location') }}',
+                            items: {{ $locations }},
+                            filteredItems: [],
+                            showDropdown: false,
+                            init() {
+                                this.filteredItems = this.items;
+                                this.$watch('search', (value) => {
+                                    this.filteredItems = this.items.filter(item => 
+                                        item.toLowerCase().includes(value.toLowerCase())
+                                    );
+                                    this.showDropdown = value.length > 0;
+                                });
+                            }
+                        }">
                             <input type="text" 
                                 id="location"
                                 name="location"
@@ -140,7 +130,7 @@
                                 @focus="showDropdown = true"
                                 @click.away="showDropdown = false"
                                 placeholder="Cari berdasarkan lokasi..."
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-[38px]">
                             
                             <!-- Dropdown -->
                             <div x-show="showDropdown" 
@@ -161,23 +151,23 @@
                         </div>
                     </div>
 
-                    <div class="flex-1" x-data="{ 
-                        search: '{{ request('project_code') }}',
-                        items: {{ $projectCodes }},
-                        filteredItems: [],
-                        showDropdown: false,
-                        init() {
-                            this.filteredItems = this.items;
-                            this.$watch('search', (value) => {
-                                this.filteredItems = this.items.filter(item => 
-                                    item.toLowerCase().includes(value.toLowerCase())
-                                );
-                                this.showDropdown = value.length > 0;
-                            });
-                        }
-                    }">
-                        <x-input-label for="project_code" :value="__('Project')" />
-                        <div class="relative">
+                    <div class="flex-1">
+                        <x-input-label for="project_code" :value="__('Project')" class="mb-1" />
+                        <div class="relative" x-data="{ 
+                            search: '{{ request('project_code') }}',
+                            items: {{ $projectCodes }},
+                            filteredItems: [],
+                            showDropdown: false,
+                            init() {
+                                this.filteredItems = this.items;
+                                this.$watch('search', (value) => {
+                                    this.filteredItems = this.items.filter(item => 
+                                        item.toLowerCase().includes(value.toLowerCase())
+                                    );
+                                    this.showDropdown = value.length > 0;
+                                });
+                            }
+                        }">
                             <input type="text" 
                                 id="project_code"
                                 name="project_code"
@@ -185,7 +175,7 @@
                                 @focus="showDropdown = true"
                                 @click.away="showDropdown = false"
                                 placeholder="Cari berdasarkan kode project..."
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-[38px]">
                             
                             <!-- Dropdown -->
                             <div x-show="showDropdown" 
@@ -206,15 +196,15 @@
                         </div>
                     </div>
 
-                    <div class="w-full sm:w-auto flex gap-2">
+                    <div class="flex gap-2 items-stretch h-[38px]">
                         <button type="submit" 
-                            class="flex-1 sm:flex-none px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                            {{ __('Cari') }}
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200 flex items-center justify-center min-w-[80px]">
+                            <span>Cari</span>
                         </button>
                         @if(request()->hasAny(['employee_search', 'report_date', 'location', 'project_code']))
                             <a href="{{ route('reports.index') }}" 
-                                class="flex-1 sm:flex-none px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 inline-flex items-center justify-center">
-                                {{ __('Reset') }}
+                                class="px-4 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors duration-200 flex items-center justify-center min-w-[80px] border border-red-200">
+                                <span>Reset</span>
                             </a>
                         @endif
                     </div>
@@ -512,34 +502,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById('report_date');
-    
-    function formatDateForDisplay(dateString) {
-        if (!dateString) return '';
-        const parts = dateString.split('-');
-        if (parts.length !== 3) return dateString;
-        
-        const year = parts[0];
-        const month = parts[1];
-        const day = parts[2];
-        
-        return `${day}/${month}/${year}`;
-    }
-
-    // Format tanggal saat halaman dimuat
-    if (dateInput.value) {
-        dateInput.setAttribute('data-date', formatDateForDisplay(dateInput.value));
-    }
-
-    // Update format saat tanggal berubah
-    dateInput.addEventListener('change', function() {
-        this.setAttribute('data-date', formatDateForDisplay(this.value));
-    });
-});
-</script>
-@endpush 
+</x-app-layout> 
