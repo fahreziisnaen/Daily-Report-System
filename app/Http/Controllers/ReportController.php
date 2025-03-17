@@ -16,35 +16,46 @@ class ReportController extends Controller
 
     public function index(Request $request)
     {
-        $query = Report::with(['user', 'details'])
-            ->when(!auth()->user()->hasRole('admin'), function ($query) {
-                return $query->where('user_id', auth()->id());
-            })
-            ->when($request->filled('employee_search'), function ($query) use ($request) {
-                return $query->whereHas('user', function($q) use ($request) {
-                    $q->where('name', $request->employee_search);
-                });
-            })
-            ->when($request->filled('report_date'), function ($query) use ($request) {
-                return $query->whereDate('report_date', $request->report_date);
-            })
-            ->when($request->filled('location'), function ($query) use ($request) {
-                return $query->where('location', $request->location);
-            })
-            ->when($request->filled('project_code'), function ($query) use ($request) {
-                return $query->where('project_code', $request->project_code);
-            })
-            ->latest('report_date');
+        $query = Report::with(['user', 'details']);
+        
+        // Debug user role
+        \Log::info('User Role Check', [
+            'user_id' => auth()->id(),
+            'is_admin' => auth()->user()->hasRole('admin'),
+            'roles' => auth()->user()->getRoleNames()
+        ]);
+
+        // Filter berdasarkan user_id kecuali untuk admin
+        if (!auth()->user()->hasRole('admin')) {
+            $query->where('user_id', auth()->id());
+        }
+
+        // Filter lainnya
+        $query->when($request->filled('employee_search'), function ($query) use ($request) {
+            return $query->whereHas('user', function($q) use ($request) {
+                $q->where('name', $request->employee_search);
+            });
+        })
+        ->when($request->filled('report_date'), function ($query) use ($request) {
+            return $query->whereDate('report_date', $request->report_date);
+        })
+        ->when($request->filled('location'), function ($query) use ($request) {
+            return $query->where('location', $request->location);
+        })
+        ->when($request->filled('project_code'), function ($query) use ($request) {
+            return $query->where('project_code', $request->project_code);
+        })
+        ->latest('report_date');
 
         // Debug query
         \Log::info('Report Query', [
-            'user_id' => $request->user_id,
-            'employee_search' => $request->employee_search,
+            'user_id' => auth()->id(),
+            'is_filtered' => !auth()->user()->hasRole('admin'),
             'sql' => $query->toSql(),
             'bindings' => $query->getBindings()
         ]);
 
-        // Get unique values for dropdowns
+        // Get data for dropdowns
         $locations = Report::distinct()->pluck('location');
         $projectCodes = Report::distinct()->pluck('project_code');
         $employees = User::pluck('name');
@@ -242,6 +253,7 @@ class ReportController extends Controller
             }
 
             $spreadsheet = IOFactory::load($templatePath);
+            $sheet = $spreadsheet->getActiveSheet();
             
             // Format tanggal dan data umum
             Carbon::setLocale('id');
@@ -249,97 +261,69 @@ class ReportController extends Controller
             $dayDate = $reportDate->isoFormat('dddd, D MMMM Y');
             $exportDate = 'Tgl. ' . $reportDate->isoFormat('D MMMM Y');
 
-            // Waktu normal
-            $dayOfWeek = $reportDate->dayOfWeek;
-            $normalStart = '08:45';
-            $normalEnd = ($dayOfWeek == 6) ? '13:00' : '17:00';
-            
-            // Convert times untuk perbandingan
-            $startTime = substr($report->start_time, 0, 5);
-            $endTime = substr($report->end_time, 0, 5);
-            
-            // Function untuk mengisi sheet
-            $fillSheet = function($sheet, $start, $end) use ($report, $dayDate, $exportDate) {
-                // Set checkbox berdasarkan work_day_type
-                if ($report->work_day_type === 'Hari Kerja') {
-                    $sheet->setCellValue('H7', 'Hari Kerja            ☑');
-                    $sheet->setCellValue('H8', 'Hari Libur            ☐');
-                } else {
-                    $sheet->setCellValue('H7', 'Hari Kerja            ☐');
-                    $sheet->setCellValue('H8', 'Hari Libur            ☑');
-                }
+            // Waktu mulai dan selesai (langsung ambil dari database)
+            $startTime = Carbon::parse($report->start_time)->format('H:i');
+            $endTime = Carbon::parse($report->end_time)->format('H:i');
 
-                // Fill data
-                $sheet->setCellValue('C7', $report->user->name);
-                $sheet->setCellValue('C8', 'Project Engineering');
-                $sheet->setCellValue('C11', $dayDate);
-                $sheet->setCellValue('H11', $start);
-                $sheet->setCellValue('H12', $end);
-
-                // Set checkbox dan lokasi berdasarkan perbandingan lokasi
-                if ($report->location === $report->user->homebase) {
-                    $sheet->setCellValue('C12', '☑');
-                    $sheet->setCellValue('C13', '☐');
-                    $sheet->setCellValue('E13', '');
-                } else {
-                    $sheet->setCellValue('C12', '☐');
-                    $sheet->setCellValue('C13', '☑');
-                    $sheet->setCellValue('E13', $report->location);
-                }
-
-                // Fill work details (maksimal 3)
-                $details = $report->details->take(3)->values();
-                foreach ($details as $index => $detail) {
-                    $description = preg_replace('/^Task #\d+:\s*/', '', $detail->description);
-                    $description = preg_replace('/ - (Selesai|Dalam Proses|Tertunda|Bermasalah)$/', '', $description);
-                    $currentRow = 14 + $index;
-                    $sheet->setCellValue('C' . $currentRow, $description);
-                }
-
-                // Project ID dan tanda tangan tetap di posisi yang sama
-                $sheet->setCellValue('C17', $report->project_code);
-                $sheet->setCellValue('B25', $report->user->name);
-                $sheet->setCellValue('B26', $exportDate);
-
-                // Tambahkan border bottom untuk cell tanda tangan
-                $sheet->getStyle('B25')->getBorders()->getBottom()->setBorderStyle(
-                    \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
-                );
-
-                // Update posisi tanda tangan
-                if ($report->user->signature_path && file_exists(storage_path('app/public/' . $report->user->signature_path))) {
-                    $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                    $drawing->setName('Signature');
-                    $drawing->setDescription('Signature');
-                    $drawing->setPath(storage_path('app/public/' . $report->user->signature_path));
-                    $drawing->setCoordinates('B23');
-                    $drawing->setWidth(200);
-                    $drawing->setHeight(80);
-                    $drawing->setOffsetX(35);
-                    $drawing->setOffsetY(0);
-                    $drawing->setRotation(0);
-                    $drawing->setWorksheet($sheet);
-                }
-            };
-
-            // Logika export berdasarkan tipe hari dan status
-            if ($report->work_day_type === 'Hari Libur' || $dayOfWeek == 0) {
-                // Jika hari libur atau Minggu, semua jam dihitung lembur
-                $sheet1 = $spreadsheet->getSheet(0);
-                $fillSheet($sheet1, $startTime, $endTime);
+            // Set checkbox berdasarkan work_day_type
+            if ($report->work_day_type === 'Hari Kerja') {
+                $sheet->setCellValue('H7', 'Hari Kerja            ☑');
+                $sheet->setCellValue('H8', 'Hari Libur            ☐');
             } else {
-                // Untuk hari kerja normal
-                if ($startTime < $normalStart) {
-                    // Lembur pagi
-                    $sheet1 = $spreadsheet->getSheet(0);
-                    $fillSheet($sheet1, $startTime, $normalStart);
-                }
+                $sheet->setCellValue('H7', 'Hari Kerja            ☐');
+                $sheet->setCellValue('H8', 'Hari Libur            ☑');
+            }
 
-                if ($endTime > $normalEnd || $report->is_overnight) {
-                    // Lembur sore/malam
-                    $sheet2 = $spreadsheet->getSheet(1);
-                    $fillSheet($sheet2, $normalEnd, $endTime);
-                }
+            // Fill data
+            $sheet->setCellValue('C7', $report->user->name);
+            $sheet->setCellValue('C8', 'Project Engineering');
+            $sheet->setCellValue('C11', $dayDate);
+            $sheet->setCellValue('H11', $startTime);
+            $sheet->setCellValue('H12', $endTime);
+
+            // Set checkbox dan lokasi
+            if ($report->location === $report->user->homebase) {
+                $sheet->setCellValue('C12', '☑');
+                $sheet->setCellValue('C13', '☐');
+                $sheet->setCellValue('E13', '');
+            } else {
+                $sheet->setCellValue('C12', '☐');
+                $sheet->setCellValue('C13', '☑');
+                $sheet->setCellValue('E13', $report->location);
+            }
+
+            // Fill work details (maksimal 3)
+            $details = $report->details->take(3)->values();
+            foreach ($details as $index => $detail) {
+                $description = preg_replace('/^Task #\d+:\s*/', '', $detail->description);
+                $description = preg_replace('/ - (Selesai|Dalam Proses|Tertunda|Bermasalah)$/', '', $description);
+                $currentRow = 14 + $index;
+                $sheet->setCellValue('C' . $currentRow, $description);
+            }
+
+            // Project ID dan tanda tangan
+            $sheet->setCellValue('C17', $report->project_code);
+            $sheet->setCellValue('B25', $report->user->name);
+            $sheet->setCellValue('B26', $exportDate);
+
+            // Tambahkan border bottom untuk cell tanda tangan
+            $sheet->getStyle('B25')->getBorders()->getBottom()->setBorderStyle(
+                \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+            );
+
+            // Update posisi tanda tangan
+            if ($report->user->signature_path && file_exists(storage_path('app/public/' . $report->user->signature_path))) {
+                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawing->setName('Signature');
+                $drawing->setDescription('Signature');
+                $drawing->setPath(storage_path('app/public/' . $report->user->signature_path));
+                $drawing->setCoordinates('B23');
+                $drawing->setWidth(200);
+                $drawing->setHeight(80);
+                $drawing->setOffsetX(35);
+                $drawing->setOffsetY(0);
+                $drawing->setRotation(0);
+                $drawing->setWorksheet($sheet);
             }
 
             // Set header untuk download
@@ -347,15 +331,17 @@ class ReportController extends Controller
             header('Content-Disposition: attachment;filename="Lembur-' . $report->user->name . '-' . $report->report_date->format('Y-m-d') . '.xlsx"');
             header('Cache-Control: max-age=0');
 
-            // Create Excel writer
+            // Create Excel writer dan export
             $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-            
-            // Save to php output
             ob_end_clean();
             $writer->save('php://output');
             exit;
 
         } catch (\Exception $e) {
+            \Log::error('Export Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return redirect()->back()->with('error', 'Gagal mengexport file: ' . $e->getMessage());
         }
     }
