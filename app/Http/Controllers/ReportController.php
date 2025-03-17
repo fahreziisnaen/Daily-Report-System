@@ -62,37 +62,50 @@ class ReportController extends Controller
 
     private function isOvertime($start_time, $end_time, $is_overnight = false, $work_day_type = 'Hari Kerja', $report_date = null)
     {
-        // Gunakan report_date dari parameter atau hari ini jika null
+        // Log input parameters
+        \Log::info('Overtime Calculation Input', [
+            'start_time' => $start_time,
+            'end_time' => $end_time,
+            'is_overnight' => $is_overnight,
+            'work_day_type' => $work_day_type,
+            'report_date' => $report_date
+        ]);
+
         $date = $report_date ? Carbon::parse($report_date) : Carbon::today();
         $dayOfWeek = $date->dayOfWeek;
+
+        $start = Carbon::parse($report_date . ' ' . $start_time);
+        $end = Carbon::parse($report_date . ' ' . $end_time);
+        
+        if ($is_overnight) {
+            $end->addDay();
+        }
+
+        // Gunakan diffInMinutes(true) untuk mendapatkan nilai absolut
+        $totalMinutes = $end->diffInMinutes($start, true);
+        $totalHours = $totalMinutes / 60;
+
+        // Log calculation results
+        \Log::info('Overtime Calculation Result', [
+            'start_datetime' => $start->format('Y-m-d H:i'),
+            'end_datetime' => $end->format('Y-m-d H:i'),
+            'total_hours' => $totalHours,
+            'day_of_week' => $dayOfWeek,
+            'is_overtime' => ($dayOfWeek >= 1 && $dayOfWeek <= 5) ? ($totalHours >= 8.25) : ($dayOfWeek == 6 ? ($totalHours >= 4.25) : true)
+        ]);
 
         // Jika hari Minggu (0) atau hari libur, otomatis overtime
         if ($dayOfWeek == 0 || $work_day_type === 'Hari Libur') {
             return true;
         }
 
-        // Convert times untuk perbandingan
-        $start = Carbon::parse($start_time);
-        $end = Carbon::parse($end_time);
-        
-        // Jika overnight, tambah 1 hari ke end time
-        if ($is_overnight) {
-            $end->addDay();
-        }
-
-        // Hitung total jam kerja dalam menit
-        $totalMinutes = $end->diffInMinutes($start);
-        $totalHours = $totalMinutes / 60;
-
         // Untuk hari kerja (Senin-Jumat)
         if ($dayOfWeek >= 1 && $dayOfWeek <= 5) {
-            // Jika total jam kerja lebih dari atau sama dengan 8 jam 15 menit (8.25 jam)
-            return $totalHours >= 8.25;
+            return $totalHours >= 8.25; // 8 jam 15 menit
         }
         // Untuk hari Sabtu
         else if ($dayOfWeek == 6) {
-            // Jika total jam kerja lebih dari atau sama dengan 4 jam 15 menit (4.25 jam)
-            return $totalHours >= 4.25;
+            return $totalHours >= 4.25; // 4 jam 15 menit
         }
 
         return false;
@@ -160,62 +173,52 @@ class ReportController extends Controller
     {
         $this->authorize('update', $report);
 
-        $validated = $request->validate([
+        $request->validate([
             'report_date' => 'required|date',
             'project_code' => 'required|string',
             'location' => 'required|string',
             'start_time' => 'required',
             'end_time' => 'required',
+            'work_day_type' => 'required|in:Hari Kerja,Hari Libur',
             'work_details' => 'required|array|min:1',
             'work_details.*.description' => 'required|string',
             'work_details.*.status' => 'required|in:Selesai,Dalam Proses,Tertunda,Bermasalah',
         ]);
 
+        // Hitung ulang overtime berdasarkan data terbaru
         $is_overtime = $this->isOvertime(
-            $request->start_time, 
+            $request->start_time,
             $request->end_time,
             $request->boolean('is_overnight'),
             $request->work_day_type,
             $request->report_date
         );
 
-        DB::beginTransaction();
-        try {
-            // Update report dengan waktu Asia/Jakarta
-            $report->update([
-                'report_date' => $validated['report_date'],
-                'project_code' => $validated['project_code'],
-                'location' => $validated['location'],
-                'start_time' => $validated['start_time'],
-                'end_time' => $validated['end_time'],
-                'is_overnight' => $request->boolean('is_overnight'),
-                'is_shift' => $request->boolean('is_shift'),
-                'is_overtime' => $is_overtime,
-                'work_day_type' => $request->work_day_type,
-                'updated_by' => auth()->id(),
+        // Update report dengan data baru termasuk is_overtime
+        $report->update([
+            'report_date' => $request->report_date,
+            'project_code' => $request->project_code,
+            'location' => $request->location,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'is_overnight' => $request->boolean('is_overnight'),
+            'is_shift' => $request->boolean('is_shift'),
+            'is_overtime' => $is_overtime,  // Set nilai overtime yang baru
+            'work_day_type' => $request->work_day_type,
+            'updated_by' => auth()->id()
+        ]);
+
+        // Update work details
+        $report->details()->delete();
+        foreach ($request->work_details as $detail) {
+            $report->details()->create([
+                'description' => $detail['description'],
+                'status' => $detail['status'],
             ]);
-
-            // Set timezone ke Asia/Jakarta sebelum touch
-            date_default_timezone_set('Asia/Jakarta');
-            $report->touch();
-
-            // Update work details
-            $report->details()->delete();
-            foreach ($validated['work_details'] as $detail) {
-                $report->details()->create([
-                    'description' => $detail['description'],
-                    'status' => $detail['status'],
-                ]);
-            }
-
-            DB::commit();
-            return redirect()->route('reports.show', $report)
-                ->with('success', 'Laporan berhasil diperbarui.');
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return back()->with('error', 'Gagal memperbarui laporan: ' . $e->getMessage());
         }
+
+        return redirect()->route('reports.show', $report)
+            ->with('success', 'Laporan berhasil diupdate.');
     }
 
     public function destroy(Report $report)
