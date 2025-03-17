@@ -205,32 +205,63 @@
     </div>
 
     <!-- Add User Modal -->
-    <x-modal name="add-user" :show="false">
+    <x-modal name="add-user" :show="session()->has('show-add-user-modal')">
         <form method="POST" 
             action="{{ route('admin.users.store') }}" 
             x-data="{ 
                 showConfirmation: false,
-                selectedRole: 'employee',
+                selectedRole: '{{ old('role', 'employee') }}',
                 formSubmitted: false,
+                
                 submitForm(e) {
-                    if (this.formSubmitted) return; // Prevent double submission
-                    
                     e.preventDefault();
-                    if (this.selectedRole === 'admin' && !this.showConfirmation) {
+                    
+                    if (this.formSubmitted) return;
+                    
+                    if (this.selectedRole === 'admin') {
                         this.showConfirmation = true;
                     } else {
                         this.formSubmitted = true;
-                        this.$el.submit(); // Use $el to reference the form element
+                        $refs.addUserForm.submit();
                     }
                 },
+                
                 confirmSubmit() {
+                    if (this.formSubmitted) return;
+                    
                     this.formSubmitted = true;
-                    this.showConfirmation = false;
-                    this.$el.submit(); // Use $el to reference the form element
+                    $refs.addUserForm.submit();
                 }
             }" 
+            x-ref="addUserForm"
             class="p-6">
             @csrf
+
+            <!-- Error Dialog -->
+            @if ($errors->any())
+            <div class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            Terdapat beberapa kesalahan:
+                        </h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <ul class="list-disc list-inside">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <h2 class="text-lg font-medium text-gray-900 mb-4">
                 {{ __('Add New User') }}
@@ -239,21 +270,36 @@
             <!-- Name -->
             <div class="mb-4">
                 <x-input-label for="name" :value="__('Name')" />
-                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" required />
+                <x-text-input id="name" 
+                    name="name" 
+                    type="text" 
+                    class="mt-1 block w-full" 
+                    :value="old('name')"
+                    required />
                 <x-input-error :messages="$errors->get('name')" class="mt-2" />
             </div>
 
             <!-- Email -->
             <div class="mb-4">
                 <x-input-label for="email" :value="__('Email')" />
-                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" required />
+                <x-text-input id="email" 
+                    name="email" 
+                    type="email" 
+                    class="mt-1 block w-full" 
+                    :value="old('email')"
+                    required />
                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
             </div>
 
             <!-- Homebase -->
             <div class="mb-4">
                 <x-input-label for="homebase" :value="__('Homebase')" />
-                <x-text-input id="homebase" name="homebase" type="text" class="mt-1 block w-full" required />
+                <x-text-input id="homebase" 
+                    name="homebase" 
+                    type="text" 
+                    class="mt-1 block w-full" 
+                    :value="old('homebase')"
+                    required />
                 <x-input-error :messages="$errors->get('homebase')" class="mt-2" />
             </div>
 
@@ -281,52 +327,32 @@
             </div>
 
             <!-- Modal Konfirmasi Admin -->
-            <template x-teleport="body">
-                <div x-show="showConfirmation" 
-                    class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center">
-                    <div x-show="showConfirmation"
-                        @click.outside="showConfirmation = false"
-                        class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                        
-                        <!-- Modal Header -->
-                        <div class="p-4 border-b">
-                            <h3 class="text-lg font-medium text-gray-900 text-left">Konfirmasi Role Admin</h3>
-                        </div>
+            <div x-show="showConfirmation" 
+                class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center"
+                @click.away="showConfirmation = false; selectedRole = 'employee'">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" @click.stop>
+                    <div class="p-4 border-b">
+                        <h3 class="text-lg font-medium text-gray-900">Konfirmasi Role Admin</h3>
+                    </div>
 
-                        <!-- Modal Body -->
-                        <div class="p-4">
-                            <div class="flex items-start mb-4">
-                                <div class="flex-shrink-0 bg-yellow-100 rounded-full p-2 mr-3">
-                                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                    </svg>
-                                </div>
-                                <p class="text-gray-600">Apakah Anda yakin ingin menambahkan user ini sebagai Admin?</p>
-                            </div>
-                            <div class="text-sm text-gray-500 bg-gray-50 rounded p-3">
-                                <div class="text-left">
-                                    <p>User dengan role Admin memiliki akses penuh ke semua fitur sistem.</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="p-4">
+                        <p class="text-gray-600">Apakah Anda yakin ingin menambahkan user ini sebagai Admin?</p>
+                    </div>
 
-                        <!-- Modal Footer -->
-                        <div class="p-4 border-t flex justify-end space-x-3">
-                            <button type="button" 
-                                @click="showConfirmation = false; selectedRole = 'employee'"
-                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
-                                Batal
-                            </button>
-                            <button type="button"
-                                @click="confirmSubmit()"
-                                class="px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700">
-                                Konfirmasi
-                            </button>
-                        </div>
+                    <div class="p-4 border-t flex justify-end space-x-3">
+                        <button type="button" 
+                            @click="showConfirmation = false; selectedRole = 'employee'"
+                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">
+                            Batal
+                        </button>
+                        <button type="button"
+                            @click="confirmSubmit()"
+                            class="px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700">
+                            Konfirmasi
+                        </button>
                     </div>
                 </div>
-            </template>
+            </div>
 
             <div class="mt-6 flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">

@@ -51,25 +51,47 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'homebase' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', 'exists:roles,name'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => [
+                    'required', 
+                    'string', 
+                    'email', 
+                    'max:255',
+                    'unique:users,email'
+                ],
+                'homebase' => ['required', 'string', 'max:255'],
+                'password' => ['required', 'string', 'min:8'],
+                'role' => ['required', 'exists:roles,name'],
+            ], [
+                'email.unique' => 'Email sudah digunakan oleh user lain.',
+                'email.required' => 'Email harus diisi.',
+                'email.email' => 'Format email tidak valid.',
+                'name.required' => 'Nama harus diisi.',
+                'homebase.required' => 'Homebase harus diisi.',
+                'password.required' => 'Password harus diisi.',
+                'password.min' => 'Password minimal 8 karakter.',
+            ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'homebase' => $request->homebase,
-            'password' => Hash::make($request->password),
-        ]);
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'homebase' => $validated['homebase'],
+                'password' => Hash::make($validated['password']),
+            ]);
 
-        $user->assignRole($request->role);
+            $user->assignRole($validated['role']);
 
-        return redirect()->route('admin.users.index')
-            ->with('success', 'User berhasil ditambahkan');
+            return redirect()->route('admin.users.index')
+                ->with('success', 'User berhasil ditambahkan');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('show-add-user-modal', true);
+        }
     }
 
     public function destroy(User $user)
