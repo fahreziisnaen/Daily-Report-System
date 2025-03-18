@@ -64,11 +64,23 @@ class RekapController extends Controller
         $month = $request->get('month', date('n'));
         $year = $request->get('year', date('Y'));
 
-        $users = User::role('employee')->get()->map(function($user) use ($month, $year) {
+        // Ambil semua user tanpa filter role
+        $users = User::all()->map(function($user) use ($month, $year) {
+            \Log::info("Processing user {$user->name}", [
+                'user_id' => $user->id,
+                'month' => $month,
+                'year' => $year
+            ]);
+
             $reports = $user->reports()
                 ->whereMonth('report_date', $month)
                 ->whereYear('report_date', $year)
                 ->get();
+
+            \Log::info("Found reports for {$user->name}", [
+                'report_count' => $reports->count(),
+                'reports' => $reports->pluck('report_date', 'id')
+            ]);
 
             $totalWorkHours = 0;
             $totalOvertimeHours = 0;
@@ -88,6 +100,11 @@ class RekapController extends Controller
                 'report_count' => $reportCount
             ];
         });
+
+        // Filter hanya user yang memiliki laporan
+        $users = $users->filter(function($user) {
+            return $user['report_count'] > 0;
+        })->values();
 
         $months = [];
         for($i = 1; $i <= 12; $i++) {
