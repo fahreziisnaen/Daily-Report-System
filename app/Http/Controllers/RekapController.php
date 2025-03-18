@@ -24,7 +24,7 @@ class RekapController extends Controller
         }
 
         // Total durasi kerja dalam jam
-        $totalHours = $end->diffInMinutes($start) / 60;
+        $totalHours = $start->diffInMinutes($end) / 60;
 
         // Jika hari libur atau Minggu, semua jam dihitung sebagai lembur
         if($report->work_day_type === 'Hari Libur' || $baseDate->dayOfWeek == 0) {
@@ -61,19 +61,20 @@ class RekapController extends Controller
 
     public function index(Request $request)
     {
-        $month = $request->get('month', now()->month);
-        $year = $request->get('year', now()->year);
+        $month = $request->get('month', date('n'));
+        $year = $request->get('year', date('Y'));
 
-        $query = User::with(['reports' => function($query) use ($month, $year) {
-            $query->whereMonth('report_date', $month)
-                ->whereYear('report_date', $year);
-        }]);
+        $users = User::role('employee')->get()->map(function($user) use ($month, $year) {
+            $reports = $user->reports()
+                ->whereMonth('report_date', $month)
+                ->whereYear('report_date', $year)
+                ->get();
 
-        $users = $query->get()->map(function($user) {
             $totalWorkHours = 0;
             $totalOvertimeHours = 0;
+            $reportCount = $reports->count();
 
-            foreach($user->reports as $report) {
+            foreach($reports as $report) {
                 $hours = $this->calculateHours($report);
                 $totalWorkHours += $hours['workHours'];
                 $totalOvertimeHours += $hours['overtimeHours'];
@@ -82,19 +83,20 @@ class RekapController extends Controller
             return [
                 'id' => $user->id,
                 'name' => $user->name,
-                'total_work_hours' => number_format(abs($totalWorkHours), 2),
-                'total_overtime_hours' => number_format(abs($totalOvertimeHours), 2),
-                'report_count' => $user->reports->count()
+                'total_work_hours' => round($totalWorkHours, 2),
+                'total_overtime_hours' => round($totalOvertimeHours, 2),
+                'report_count' => $reportCount
             ];
         });
 
-        return view('rekap.index', [
-            'users' => $users,
-            'month' => $month,
-            'year' => $year,
-            'months' => $this->getMonths(),
-            'years' => range(now()->year - 2, now()->year)
-        ]);
+        $months = [];
+        for($i = 1; $i <= 12; $i++) {
+            $months[$i] = Carbon::create(null, $i, 1)->format('F');
+        }
+
+        $years = range(date('Y') - 1, date('Y') + 1);
+
+        return view('rekap.index', compact('users', 'months', 'month', 'years', 'year'));
     }
 
     private function getMonths()
