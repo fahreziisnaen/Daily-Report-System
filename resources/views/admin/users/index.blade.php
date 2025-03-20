@@ -70,6 +70,7 @@
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name/Email</th>
                             <th class="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Homebase</th>
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
                     </thead>
@@ -155,9 +156,14 @@
                                     </div>
                                 </div>
                             </td>
+                            <td class="px-3 py-2">
+                                <span class="px-2 py-1 text-sm rounded-full {{ $user->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                    {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
+                                </span>
+                            </td>
                             <td class="px-3 py-2 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('admin.users.edit', $user) }}"
+                                    <a href="{{ route('admin.users.edit', $user) }}" 
                                         class="text-blue-600 hover:text-blue-900"
                                         title="Edit User">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,29 +171,41 @@
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </a>
+
                                     <button type="button"
-                                        x-data=""
-                                        x-on:click="$dispatch('open-modal', 'reset-password-{{$user->id}}')"
+                                        @click="$dispatch('open-modal', 'reset-password-{{$user->id}}')"
                                         class="text-yellow-600 hover:text-yellow-900"
                                         title="Reset Password">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                                         </svg>
                                     </button>
 
                                     @if($user->id !== auth()->id())
-                                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                onclick="return confirm('Are you sure you want to remove this user?')"
-                                                class="text-red-600 hover:text-red-900"
-                                                title="Remove User">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                </svg>
-                                            </button>
-                                        </form>
+                                        <!-- Toggle Active Button -->
+                                        <button 
+                                            @click="$dispatch('open-modal', 'toggle-active-{{$user->id}}')"
+                                            class="text-orange-600 hover:text-orange-900"
+                                            title="{{ $user->is_active ? 'Nonaktifkan User' : 'Aktifkan User' }}">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                    d="{{ $user->is_active 
+                                                        ? 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636' 
+                                                        : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' }}"/>
+                                            </svg>
+                                        </button>
+
+                                        <!-- Delete Button -->
+                                        <button 
+                                            @click="$dispatch('open-modal', 'delete-user-{{$user->id}}')"
+                                            class="text-red-600 hover:text-red-900"
+                                            title="Delete User">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -405,6 +423,83 @@
 
                 <x-primary-button class="ml-3">
                     {{ __('Reset Password') }}
+                </x-primary-button>
+            </div>
+        </form>
+    </x-modal>
+
+    <!-- Toggle Active Modal -->
+    <x-modal name="toggle-active-{{$user->id}}" focusable>
+        <form method="POST" action="{{ route('admin.users.toggle-active', $user) }}" class="p-6">
+            @csrf
+            @method('PUT')
+            
+            <h2 class="text-lg font-medium text-gray-900">
+                {{ $user->is_active ? 'Nonaktifkan User' : 'Aktifkan User' }}
+            </h2>
+
+            @if(!$user->is_active)
+                <p class="mt-1 text-sm text-gray-600">
+                    Apakah Anda yakin ingin mengaktifkan user ini?
+                </p>
+            @else
+                <div class="mt-6">
+                    <x-input-label for="reason" value="Alasan penonaktifan" />
+                    <x-text-input id="reason" name="reason" type="text" class="mt-1 block w-full" required />
+                    <p class="mt-1 text-sm text-gray-500">User yang dinonaktifkan tidak akan bisa login ke sistem.</p>
+                </div>
+            @endif
+
+            <div class="mt-6 flex justify-end">
+                <x-secondary-button x-on:click="$dispatch('close')">
+                    Batal
+                </x-secondary-button>
+
+                <x-primary-button class="ml-3">
+                    {{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                </x-primary-button>
+            </div>
+        </form>
+    </x-modal>
+
+    <!-- Delete Confirmation Modal -->
+    <x-modal name="delete-user-{{$user->id}}" focusable>
+        <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="p-6">
+            @csrf
+            @method('DELETE')
+            
+            <h2 class="text-lg font-medium text-gray-900">
+                Delete User Account
+            </h2>
+
+            <p class="mt-1 text-sm text-gray-600">
+                Warning: This action cannot be undone. This will permanently delete:
+            </p>
+
+            <ul class="list-disc ml-4 mt-2 text-sm text-gray-600">
+                <li>User account and profile</li>
+                <li>All reports created by this user</li>
+                <li>All uploaded files (avatar, signature)</li>
+            </ul>
+
+            <div class="mt-6">
+                <x-input-label for="confirm" value="Type DELETE to confirm" />
+                <x-text-input 
+                    id="confirm" 
+                    type="text" 
+                    class="mt-1 block w-full"
+                    x-data=""
+                    x-on:input="$el.form.querySelector('button[type=submit]').disabled = $el.value !== 'DELETE'"
+                    required />
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <x-secondary-button x-on:click="$dispatch('close')">
+                    Cancel
+                </x-secondary-button>
+
+                <x-primary-button class="ml-3" disabled>
+                    Delete User
                 </x-primary-button>
             </div>
         </form>

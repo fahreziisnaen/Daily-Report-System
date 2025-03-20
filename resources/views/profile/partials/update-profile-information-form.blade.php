@@ -30,31 +30,27 @@
 
         <div>
             <x-input-label for="email" :value="__('Email')" />
-            @if(request()->routeIs('admin.users.edit'))
-                <!-- Saat admin edit user, email field disabled -->
-                <x-text-input id="email" type="email" class="mt-1 block w-full bg-gray-100" :value="$user->email" disabled readonly />
-            @else
-                <!-- Saat user edit profile sendiri -->
-                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
+            @if(request()->routeIs('admin.users.edit') && auth()->user()->hasRole('admin'))
+                <!-- Admin dapat mengedit email user lain -->
+                <x-text-input 
+                    id="email" 
+                    name="email" 
+                    type="email" 
+                    class="mt-1 block w-full" 
+                    :value="old('email', $user->email)" 
+                    required 
+                    autocomplete="username" />
                 <x-input-error class="mt-2" :messages="$errors->get('email')" />
-
-                @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
-                    <div>
-                        <p class="text-sm mt-2 text-gray-800">
-                            {{ __('Your email address is unverified.') }}
-
-                            <button form="send-verification" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                {{ __('Click here to re-send the verification email.') }}
-                            </button>
-                        </p>
-
-                        @if (session('status') === 'verification-link-sent')
-                            <p class="mt-2 font-medium text-sm text-green-600">
-                                {{ __('A new verification link has been sent to your email address.') }}
-                            </p>
-                        @endif
-                    </div>
-                @endif
+            @else
+                <!-- User biasa tidak dapat mengedit email -->
+                <x-text-input 
+                    id="email" 
+                    type="email" 
+                    class="mt-1 block w-full bg-gray-100" 
+                    :value="$user->email" 
+                    disabled 
+                    readonly />
+                <p class="mt-1 text-sm text-gray-500">Email can only be changed by administrator.</p>
             @endif
         </div>
 
