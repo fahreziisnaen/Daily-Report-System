@@ -27,12 +27,30 @@
                     @if(auth()->user()->isAdmin())
                     <div class="flex-1">
                         <x-input-label for="employee_search" :value="__('Nama Karyawan')" class="mb-1" />
-                        <div class="relative">
+                        <div class="relative" x-data="{ 
+                            search: '{{ request('employee_search') }}',
+                            items: {{ $employees }},
+                            filteredItems: [],
+                            showDropdown: false,
+                            init() {
+                                this.filteredItems = this.items;
+                                this.$watch('search', (value) => {
+                                    if (value.length > 0) {
+                                        this.filteredItems = this.items.filter(item => 
+                                            item.toLowerCase().includes(value.toLowerCase())
+                                        );
+                                        this.showDropdown = true;
+                                    } else {
+                                        this.showDropdown = false;
+                                    }
+                                });
+                            }
+                        }">
                             <input type="text" 
                                 id="employee_search"
                                 name="employee_search"
                                 x-model="search"
-                                @focus="showDropdown = true"
+                                @focus="showDropdown = search.length > 0"
                                 @click.away="showDropdown = false"
                                 placeholder="Cari berdasarkan nama karyawan..." 
                                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-[38px]">
@@ -106,6 +124,7 @@
                         </div>
                     </div>
 
+                    <!-- Filter Lokasi -->
                     <div class="flex-1">
                         <x-input-label for="location" :value="__('Lokasi')" class="mb-1" />
                         <div class="relative" x-data="{ 
@@ -116,10 +135,14 @@
                             init() {
                                 this.filteredItems = this.items;
                                 this.$watch('search', (value) => {
-                                    this.filteredItems = this.items.filter(item => 
-                                        item.toLowerCase().includes(value.toLowerCase())
-                                    );
-                                    this.showDropdown = value.length > 0;
+                                    if (value.length > 0) {
+                                        this.filteredItems = this.items.filter(item => 
+                                            item.toLowerCase().includes(value.toLowerCase())
+                                        );
+                                        this.showDropdown = true;
+                                    } else {
+                                        this.showDropdown = false;
+                                    }
                                 });
                             }
                         }">
@@ -127,7 +150,7 @@
                                 id="location"
                                 name="location"
                                 x-model="search"
-                                @focus="showDropdown = true"
+                                @focus="showDropdown = search.length > 0"
                                 @click.away="showDropdown = false"
                                 placeholder="Cari berdasarkan lokasi..."
                                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-[38px]">
@@ -151,6 +174,7 @@
                         </div>
                     </div>
 
+                    <!-- Filter Project -->
                     <div class="flex-1">
                         <x-input-label for="project_code" :value="__('Project')" class="mb-1" />
                         <div class="relative" x-data="{ 
@@ -161,10 +185,14 @@
                             init() {
                                 this.filteredItems = this.items;
                                 this.$watch('search', (value) => {
-                                    this.filteredItems = this.items.filter(item => 
-                                        item.toLowerCase().includes(value.toLowerCase())
-                                    );
-                                    this.showDropdown = value.length > 0;
+                                    if (value.length > 0) {
+                                        this.filteredItems = this.items.filter(item => 
+                                            item.toLowerCase().includes(value.toLowerCase())
+                                        );
+                                        this.showDropdown = true;
+                                    } else {
+                                        this.showDropdown = false;
+                                    }
                                 });
                             }
                         }">
@@ -172,7 +200,7 @@
                                 id="project_code"
                                 name="project_code"
                                 x-model="search"
-                                @focus="showDropdown = true"
+                                @focus="showDropdown = search.length > 0"
                                 @click.away="showDropdown = false"
                                 placeholder="Cari berdasarkan kode project..."
                                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-[38px]">
