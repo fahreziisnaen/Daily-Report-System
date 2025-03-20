@@ -57,6 +57,12 @@ class User extends Authenticatable
         return $this->hasMany(Report::class);
     }
 
+    // Tambahkan relationship untuk reports yang diupdate
+    public function updatedReports(): HasMany
+    {
+        return $this->hasMany(Report::class, 'updated_by');
+    }
+
     public function isAdmin()
     {
         return $this->hasRole('admin');
