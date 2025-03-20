@@ -96,15 +96,6 @@ class ReportController extends Controller
         $totalMinutes = $end->diffInMinutes($start, true);
         $totalHours = $totalMinutes / 60;
 
-        // Log calculation results
-        \Log::info('Overtime Calculation Result', [
-            'start_datetime' => $start->format('Y-m-d H:i'),
-            'end_datetime' => $end->format('Y-m-d H:i'),
-            'total_hours' => $totalHours,
-            'day_of_week' => $dayOfWeek,
-            'is_overtime' => ($dayOfWeek >= 1 && $dayOfWeek <= 5) ? ($totalHours >= 8.25) : ($dayOfWeek == 6 ? ($totalHours >= 4.25) : true)
-        ]);
-
         // Jika hari Minggu (0) atau hari libur, otomatis overtime
         if ($dayOfWeek == 0 || $work_day_type === 'Hari Libur') {
             return true;
@@ -112,11 +103,11 @@ class ReportController extends Controller
 
         // Untuk hari kerja (Senin-Jumat)
         if ($dayOfWeek >= 1 && $dayOfWeek <= 5) {
-            return $totalHours >= 8.25; // 8 jam 15 menit
+            return $totalHours > 8.25; // Ubah dari >= menjadi >
         }
         // Untuk hari Sabtu
         else if ($dayOfWeek == 6) {
-            return $totalHours >= 4.25; // 4 jam 15 menit
+            return $totalHours > 4.25; // Ubah dari >= menjadi >
         }
 
         return false;

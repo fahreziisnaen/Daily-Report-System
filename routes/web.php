@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/rekap/export/{user}', [RekapController::class, 'export'])->name('rekap.export');
         Route::resource('projects', ProjectController::class);
         Route::get('/api/active-projects', [ProjectController::class, 'getActiveProjects']);
+        Route::put('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
     });
 
     // Employee routes

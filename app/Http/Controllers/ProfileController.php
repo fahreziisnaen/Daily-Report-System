@@ -27,13 +27,19 @@ class ProfileController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
-        $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $request->user()->id],
             'homebase' => ['required', 'string', 'max:255'],
             'avatar' => ['nullable', 'image', 'max:1024'], // max 1MB
             'signature' => ['nullable', 'image', 'max:1024'],
-        ]);
+        ];
+
+        // Tambahkan validasi email hanya jika admin yang mengedit
+        if ($request->routeIs('admin.users.edit') && auth()->user()->hasRole('admin')) {
+            $rules['email'] = ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $request->user()->id];
+        }
+
+        $request->validate($rules);
 
         if ($request->hasFile('avatar')) {
             if ($request->user()->avatar_path) {
@@ -51,16 +57,17 @@ class ProfileController extends Controller
             $request->user()->signature_path = $signaturePath;
         }
 
-        $request->user()->fill([
+        $data = [
             'name' => $request->name,
-            'email' => $request->email,
             'homebase' => $request->homebase,
-        ]);
+        ];
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Tambahkan email ke data update hanya jika admin yang mengedit
+        if ($request->routeIs('admin.users.edit') && auth()->user()->hasRole('admin')) {
+            $data['email'] = $request->email;
         }
 
+        $request->user()->fill($data);
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');

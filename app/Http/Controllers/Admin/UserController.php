@@ -160,4 +160,24 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil diupdate');
     }
+
+    public function toggleActive(User $user)
+    {
+        // Prevent self-deactivation
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'You cannot deactivate your own account.');
+        }
+
+        // Prevent deactivating last admin
+        if ($user->hasRole('admin') && User::role('admin')->where('is_active', true)->count() <= 1) {
+            return redirect()->back()->with('error', 'Cannot deactivate the last active admin.');
+        }
+
+        $user->is_active = !$user->is_active;
+        $user->inactive_reason = $user->is_active ? null : request('reason');
+        $user->save();
+
+        $status = $user->is_active ? 'activated' : 'deactivated';
+        return redirect()->back()->with('success', "User has been {$status} successfully.");
+    }
 } 
