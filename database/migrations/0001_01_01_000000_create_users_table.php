@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('password');
             $table->string('avatar_path')->nullable();
             $table->string('signature_path')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->string('inactive_reason')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

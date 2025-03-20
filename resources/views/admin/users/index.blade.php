@@ -89,11 +89,16 @@
                                     currentRole: '{{ $user->roles->first()->name }}',
                                     newRole: '{{ $user->roles->first()->name }}',
                                     formSubmitted: false,
+                                    confirmationMessage: '',
                                     
                                     updateRole() {
                                         if (this.formSubmitted) return;
                                         
                                         if (this.newRole === 'admin' && this.currentRole !== 'admin') {
+                                            this.confirmationMessage = 'Apakah Anda yakin ingin mengubah role user ini menjadi Admin?';
+                                            this.showConfirmation = true;
+                                        } else if (this.currentRole === 'admin' && this.newRole !== 'admin') {
+                                            this.confirmationMessage = 'Peringatan: Mengubah role Admin menjadi Employee akan menghilangkan semua hak akses admin. Lanjutkan?';
                                             this.showConfirmation = true;
                                         } else {
                                             this.submitRoleUpdate();
@@ -135,9 +140,16 @@
                                             </div>
 
                                             <div class="p-4">
-                                                <p class="text-gray-600">
-                                                    Apakah Anda yakin ingin mengubah role user ini menjadi Admin?
-                                                </p>
+                                                <div class="mb-4 text-sm text-gray-600">
+                                                    <p><strong>Nama:</strong> {{ $user->name }}</p>
+                                                    <p><strong>Email:</strong> {{ $user->email }}</p>
+                                                    <p class="mt-2"><strong>Perubahan Role:</strong></p>
+                                                    <p class="text-yellow-600">
+                                                        <span x-text="currentRole.charAt(0).toUpperCase() + currentRole.slice(1)"></span> → 
+                                                        <span x-text="newRole.charAt(0).toUpperCase() + newRole.slice(1)"></span>
+                                                    </p>
+                                                </div>
+                                                <p class="text-gray-600" x-text="confirmationMessage"></p>
                                             </div>
 
                                             <div class="p-4 border-t flex justify-end space-x-3">
@@ -391,13 +403,18 @@
             @csrf
             @method('POST')
 
-            <h2 class="text-lg font-medium text-gray-900 mb-4">
-                {{ __('Reset Password for ') . $user->name }}
+            <h2 class="text-lg font-medium text-gray-900">
+                Reset Password User
             </h2>
 
+            <div class="mt-2 text-sm text-gray-600">
+                <p><strong>Nama:</strong> {{ $user->name }}</p>
+                <p><strong>Email:</strong> {{ $user->email }}</p>
+            </div>
+
             <!-- New Password -->
-            <div class="mb-4">
-                <x-input-label for="new_password_{{$user->id}}" :value="__('New Password')" />
+            <div class="mt-4">
+                <x-input-label for="new_password_{{$user->id}}" value="Password Baru" />
                 <x-text-input id="new_password_{{$user->id}}" 
                     name="new_password" 
                     type="password" 
@@ -407,8 +424,8 @@
             </div>
 
             <!-- Confirm Password -->
-            <div class="mb-4">
-                <x-input-label for="new_password_confirmation_{{$user->id}}" :value="__('Confirm New Password')" />
+            <div class="mt-4">
+                <x-input-label for="new_password_confirmation_{{$user->id}}" value="Konfirmasi Password Baru" />
                 <x-text-input id="new_password_confirmation_{{$user->id}}" 
                     name="new_password_confirmation" 
                     type="password" 
@@ -416,13 +433,17 @@
                     required />
             </div>
 
+            <p class="mt-4 text-sm text-gray-500">
+                Password baru akan langsung aktif setelah disimpan. User perlu menggunakan password baru untuk login berikutnya.
+            </p>
+
             <div class="mt-6 flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">
-                    {{ __('Cancel') }}
+                    Batal
                 </x-secondary-button>
 
                 <x-primary-button class="ml-3">
-                    {{ __('Reset Password') }}
+                    Reset Password
                 </x-primary-button>
             </div>
         </form>
@@ -438,15 +459,23 @@
                 {{ $user->is_active ? 'Nonaktifkan User' : 'Aktifkan User' }}
             </h2>
 
+            <div class="mt-2 text-sm text-gray-600">
+                <p><strong>Nama:</strong> {{ $user->name }}</p>
+                <p><strong>Email:</strong> {{ $user->email }}</p>
+            </div>
+
             @if(!$user->is_active)
-                <p class="mt-1 text-sm text-gray-600">
-                    Apakah Anda yakin ingin mengaktifkan user ini?
+                <p class="mt-4 text-sm text-gray-600">
+                    Apakah Anda yakin ingin mengaktifkan kembali akun user ini?
                 </p>
             @else
-                <div class="mt-6">
+                <div class="mt-4">
                     <x-input-label for="reason" value="Alasan penonaktifan" />
                     <x-text-input id="reason" name="reason" type="text" class="mt-1 block w-full" required />
-                    <p class="mt-1 text-sm text-gray-500">User yang dinonaktifkan tidak akan bisa login ke sistem.</p>
+                    <p class="mt-2 text-sm text-red-500">
+                        Perhatian: User yang dinonaktifkan tidak akan dapat mengakses sistem. 
+                        Semua data dan laporan tetap tersimpan namun tidak dapat diakses sampai akun diaktifkan kembali.
+                    </p>
                 </div>
             @endif
 
@@ -456,7 +485,7 @@
                 </x-secondary-button>
 
                 <x-primary-button class="ml-3">
-                    {{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                    {{ $user->is_active ? 'Nonaktifkan User' : 'Aktifkan User' }}
                 </x-primary-button>
             </div>
         </form>
@@ -469,21 +498,30 @@
             @method('DELETE')
             
             <h2 class="text-lg font-medium text-gray-900">
-                Delete User Account
+                Hapus Akun User
             </h2>
 
-            <p class="mt-1 text-sm text-gray-600">
-                Warning: This action cannot be undone. This will permanently delete:
+            <div class="mt-2 text-sm text-gray-600">
+                <p><strong>Nama:</strong> {{ $user->name }}</p>
+                <p><strong>Email:</strong> {{ $user->email }}</p>
+            </div>
+
+            <p class="mt-4 text-sm text-red-600 font-medium">
+                Peringatan: Tindakan ini tidak dapat dibatalkan!
+            </p>
+
+            <p class="mt-2 text-sm text-gray-600">
+                Semua data berikut akan dihapus secara permanen:
             </p>
 
             <ul class="list-disc ml-4 mt-2 text-sm text-gray-600">
-                <li>User account and profile</li>
-                <li>All reports created by this user</li>
-                <li>All uploaded files (avatar, signature)</li>
+                <li>Akun dan profil user</li>
+                <li>Seluruh laporan yang dibuat oleh user</li>
+                <li>File yang diunggah (avatar, tanda tangan)</li>
             </ul>
 
             <div class="mt-6">
-                <x-input-label for="confirm" value="Type DELETE to confirm" />
+                <x-input-label for="confirm" value="Ketik DELETE untuk konfirmasi" />
                 <x-text-input 
                     id="confirm" 
                     type="text" 
@@ -495,11 +533,11 @@
 
             <div class="mt-6 flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">
-                    Cancel
+                    Batal
                 </x-secondary-button>
 
-                <x-primary-button class="ml-3" disabled>
-                    Delete User
+                <x-primary-button class="ml-3 bg-red-600 hover:bg-red-700" disabled>
+                    Hapus User
                 </x-primary-button>
             </div>
         </form>
