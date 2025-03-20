@@ -79,16 +79,17 @@
                     <div class="flex-1">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
                         <div class="relative" x-data="{ 
-                            date: '{{ request('report_date', date('Y-m-d')) }}',
-                            formattedDate: '{{ \Carbon\Carbon::parse(request('report_date', date('Y-m-d')))->format('d/m/Y') }}'
+                            date: '{{ request('report_date', '') }}',
+                            formattedDate: '{{ request('report_date') ? \Carbon\Carbon::parse(request('report_date'))->format('d/m/Y') : '' }}'
                         }">
                             <input type="date" 
                                 name="report_date" 
                                 id="report_date"
                                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base date-input h-[38px]" 
                                 x-model="date"
-                                @change="formattedDate = new Date(date).toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'})"
-                                :data-date="formattedDate">
+                                @change="formattedDate = date ? new Date(date).toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'}) : ''"
+                                :data-date="formattedDate || 'Pilih tanggal...'"
+                                placeholder="Pilih tanggal...">
                             <style>
                                 .date-input::-webkit-calendar-picker-indicator {
                                     background: transparent;
@@ -105,7 +106,6 @@
                                 }
                                 .date-input::before {
                                     content: attr(data-date);
-                                    color: #000000;
                                     position: absolute;
                                     left: 0;
                                     right: 0;
@@ -114,11 +114,20 @@
                                     padding: 0 0.75rem;
                                     pointer-events: none;
                                     z-index: 1;
+                                    color: #6B7280;  /* Default placeholder color */
+                                }
+                                .date-input:not([data-date=""]):before,
+                                .date-input[data-date]:not([data-date="Pilih tanggal..."]):before {
+                                    color: #111827;  /* Text color when date is selected */
                                 }
                                 .date-input {
                                     color: transparent !important;
                                     background: white;
                                     padding: 0.5rem 0.75rem !important;
+                                }
+                                .date-input::placeholder {
+                                    color: #6B7280;
+                                    opacity: 1;
                                 }
                             </style>
                         </div>
