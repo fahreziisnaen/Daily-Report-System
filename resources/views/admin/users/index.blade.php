@@ -94,11 +94,11 @@
                                     updateRole() {
                                         if (this.formSubmitted) return;
                                         
-                                        if (this.newRole === 'admin' && this.currentRole !== 'admin') {
-                                            this.confirmationMessage = 'Apakah Anda yakin ingin mengubah role user ini menjadi Admin?';
+                                        if (this.newRole === 'Super Admin' && this.currentRole !== 'Super Admin') {
+                                            this.confirmationMessage = 'Apakah Anda yakin ingin mengubah role user ini menjadi Super Admin?';
                                             this.showConfirmation = true;
-                                        } else if (this.currentRole === 'admin' && this.newRole !== 'admin') {
-                                            this.confirmationMessage = 'Peringatan: Mengubah role Admin menjadi Employee akan menghilangkan semua hak akses admin. Lanjutkan?';
+                                        } else if (this.currentRole === 'Super Admin' && this.newRole !== 'Super Admin') {
+                                            this.confirmationMessage = 'Peringatan: Mengubah role Super Admin menjadi Employee akan menghilangkan semua hak akses admin. Lanjutkan?';
                                             this.showConfirmation = true;
                                         } else {
                                             this.submitRoleUpdate();
@@ -131,7 +131,8 @@
 
                                     <!-- Modal Konfirmasi -->
                                     <div x-show="showConfirmation" 
-                                        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center">
+                                        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center"
+                                        x-cloak>
                                         <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                                             <div class="p-4 border-b">
                                                 <h3 class="text-lg font-medium text-gray-900">
@@ -145,8 +146,8 @@
                                                     <p><strong>Email:</strong> {{ $user->email }}</p>
                                                     <p class="mt-2"><strong>Perubahan Role:</strong></p>
                                                     <p class="text-yellow-600">
-                                                        <span x-text="currentRole.charAt(0).toUpperCase() + currentRole.slice(1)"></span> → 
-                                                        <span x-text="newRole.charAt(0).toUpperCase() + newRole.slice(1)"></span>
+                                                        <span x-text="currentRole"></span> → 
+                                                        <span x-text="newRole"></span>
                                                     </p>
                                                 </div>
                                                 <p class="text-gray-600" x-text="confirmationMessage"></p>

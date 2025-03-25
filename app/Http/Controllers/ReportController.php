@@ -21,12 +21,12 @@ class ReportController extends Controller
         // Debug user role
         \Log::info('User Role Check', [
             'user_id' => auth()->id(),
-            'is_admin' => auth()->user()->hasRole('admin'),
+            'is_admin' => auth()->user()->hasRole('Super Admin'),
             'roles' => auth()->user()->getRoleNames()
         ]);
 
         // Filter berdasarkan user_id kecuali untuk admin
-        if (!auth()->user()->hasRole('admin')) {
+        if (!auth()->user()->hasRole('Super Admin')) {
             $query->where('user_id', auth()->id());
         }
 
@@ -50,7 +50,7 @@ class ReportController extends Controller
         // Debug query
         \Log::info('Report Query', [
             'user_id' => auth()->id(),
-            'is_filtered' => !auth()->user()->hasRole('admin'),
+            'is_filtered' => !auth()->user()->hasRole('Super Admin'),
             'sql' => $query->toSql(),
             'bindings' => $query->getBindings()
         ]);

@@ -30,7 +30,7 @@
 
         <div>
             <x-input-label for="email" :value="__('Email')" />
-            @if(request()->routeIs('admin.users.edit') && auth()->user()->hasRole('admin'))
+            @if(request()->routeIs('admin.users.edit') && auth()->user()->hasRole('Super Admin'))
                 <!-- Admin dapat mengedit email user lain -->
                 <x-text-input 
                     id="email" 

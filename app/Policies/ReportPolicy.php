@@ -21,4 +21,11 @@ class ReportPolicy
     {
         return $user->isAdmin() || $report->user_id === $user->id;
     }
+
+    public function before($user, $ability)
+    {
+        if ($user->hasRole('Super Admin')) {
+            return true;
+        }
+    }
 } 

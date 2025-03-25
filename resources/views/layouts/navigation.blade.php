@@ -20,17 +20,17 @@
                         {{ __('Reports') }}
                     </x-nav-link>
 
-                    @can('admin')
+                    @role('Super Admin')
                     <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
                         {{ __('User Management') }}
                     </x-nav-link>
-                    @endcan
+                    @endrole
 
-                    @can('admin')
+                    @role('Super Admin')
                     <x-nav-link :href="route('admin.rekap.index')" :active="request()->routeIs('admin.rekap.*')">
                         {{ __('Rekap') }}
                     </x-nav-link>
-                    @endcan
+                    @endrole
                 </div>
             </div>
 
@@ -121,7 +121,7 @@
                 {{ __('Reports') }}
             </x-responsive-nav-link>
 
-            @can('admin')
+            @role('Super Admin')
             <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
                 {{ __('User Management') }}
             </x-responsive-nav-link>
@@ -129,7 +129,7 @@
             <x-responsive-nav-link :href="route('admin.rekap.index')" :active="request()->routeIs('admin.rekap.*')">
                 {{ __('Rekap') }}
             </x-responsive-nav-link>
-            @endcan
+            @endrole
         </div>
 
         <!-- Responsive Settings Options -->

@@ -17,8 +17,8 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // Create Roles
-        $adminRole = Role::create(['name' => 'admin', 'guard_name' => 'web']);
-        $employeeRole = Role::create(['name' => 'employee', 'guard_name' => 'web']);
+        $adminRole = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
+        $employeeRole = Role::firstOrCreate(['name' => 'employee', 'guard_name' => 'web']);
 
         // Create Permissions
         $permissions = [
@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission, 'guard_name' => 'web']);
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
         // Assign Permissions to Roles
@@ -56,21 +56,21 @@ class DatabaseSeeder extends Seeder
                 'email' => 'admin@fc-network.com',
                 'homebase' => 'Surabaya',
                 'password' => '$2y$12$3bwJbJz5CMjA5gGG4LKc4.JYMRJzaOw4jqgWsC8tmRtwskR7dnjzS',
-                'role' => 'admin'
+                'role' => 'Super Admin'
             ],
             [
                 'name' => 'Ingrid Melyana',
                 'email' => 'ingrid.melyana@fc-network.com',
                 'homebase' => 'Surabaya',
                 'password' => '$2y$12$K4U8OT/HTw9.XEZxSQU1UuTtnmFdwiGFOTNBamKsoBZ8b8PPsYwIu',
-                'role' => 'admin'
+                'role' => 'Super Admin'
             ],
             [
                 'name' => 'Fahrezi Isnaen Fauzan',
                 'email' => 'fahrezi.fauzan@fc-network.com',
                 'homebase' => 'Surabaya',
                 'password' => '$2y$12$XZxwqM02dAxHbymREDmVpOMSAOFXFff49bXMSEAc2/libsgzRGK1e',
-                'role' => 'admin'
+                'role' => 'Super Admin'
             ],
             [
                 'name' => 'Aditya Nata Nael',
@@ -91,14 +91,14 @@ class DatabaseSeeder extends Seeder
                 'email' => 'harista@fc-network.com',
                 'homebase' => 'Surabaya',
                 'password' => '$2y$12$AU/igupPYFhtB9/plGwTwO0XeQLsTgCl0B9KaxK3c6vPUCPTxznZi',
-                'role' => 'admin'
+                'role' => 'Super Admin'
             ],
             [
                 'name' => 'Sastro Haris',
                 'email' => 'sastro@fc-network.com',
                 'homebase' => 'Surabaya',
                 'password' => '$2y$12$e.bw85AUt6ktE2kFNarc8OQgtdYPo46xlTa3QuISGLZ9UVuib6202',
-                'role' => 'admin'
+                'role' => 'Super Admin'
             ],
             [
                 'name' => 'Kukuh Maruto Putra',
@@ -124,11 +124,21 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($users as $userData) {
-            $role = $userData['role'];
-            unset($userData['role']);
+            // Check if user exists
+            $user = User::where('email', $userData['email'])->first();
             
-            $user = User::create($userData);
-            $user->assignRole($role);
+            if (!$user) {
+                // Create new user if doesn't exist
+                $user = User::create([
+                    'name' => $userData['name'],
+                    'email' => $userData['email'],
+                    'homebase' => $userData['homebase'],
+                    'password' => $userData['password']
+                ]);
+            }
+
+            // Sync role (will remove other roles and assign this one)
+            $user->syncRoles([$userData['role']]);
         }
 
         // Create Projects

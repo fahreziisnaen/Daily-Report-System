@@ -5,12 +5,12 @@
                 {{ __('Daftar Laporan Pekerjaan') }}
             </h2>
             <div class="flex space-x-2">
-                @can('admin')
+                @role('Super Admin')
                 <a href="{{ route('admin.projects.index') }}" 
                     class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
                     {{ __('MANAGE PROJECT') }}
                 </a>
-                @endcan
+                @endrole
                 <a href="{{ route('reports.create') }}" 
                     class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
                     {{ __('BUAT LAPORAN') }}
