@@ -63,7 +63,7 @@
             </div>
 
             <!-- Users Table - Responsive -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="bg-white rounded-lg shadow overflow-hidden md:block hidden">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -94,11 +94,11 @@
                                     updateRole() {
                                         if (this.formSubmitted) return;
                                         
-                                        if (this.newRole === 'admin' && this.currentRole !== 'admin') {
-                                            this.confirmationMessage = 'Apakah Anda yakin ingin mengubah role user ini menjadi Admin?';
+                                        if (this.newRole === 'Super Admin' && this.currentRole !== 'Super Admin') {
+                                            this.confirmationMessage = 'Apakah Anda yakin ingin mengubah role user ini menjadi Super Admin?';
                                             this.showConfirmation = true;
-                                        } else if (this.currentRole === 'admin' && this.newRole !== 'admin') {
-                                            this.confirmationMessage = 'Peringatan: Mengubah role Admin menjadi Employee akan menghilangkan semua hak akses admin. Lanjutkan?';
+                                        } else if (this.currentRole === 'Super Admin' && this.newRole !== 'Super Admin') {
+                                            this.confirmationMessage = 'Peringatan: Mengubah role Super Admin menjadi Employee akan menghilangkan semua hak akses admin. Lanjutkan?';
                                             this.showConfirmation = true;
                                         } else {
                                             this.submitRoleUpdate();
@@ -131,7 +131,8 @@
 
                                     <!-- Modal Konfirmasi -->
                                     <div x-show="showConfirmation" 
-                                        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center">
+                                        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center"
+                                        x-cloak>
                                         <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                                             <div class="p-4 border-b">
                                                 <h3 class="text-lg font-medium text-gray-900">
@@ -145,8 +146,8 @@
                                                     <p><strong>Email:</strong> {{ $user->email }}</p>
                                                     <p class="mt-2"><strong>Perubahan Role:</strong></p>
                                                     <p class="text-yellow-600">
-                                                        <span x-text="currentRole.charAt(0).toUpperCase() + currentRole.slice(1)"></span> → 
-                                                        <span x-text="newRole.charAt(0).toUpperCase() + newRole.slice(1)"></span>
+                                                        <span x-text="currentRole"></span> → 
+                                                        <span x-text="newRole"></span>
                                                     </p>
                                                 </div>
                                                 <p class="text-gray-600" x-text="confirmationMessage"></p>
@@ -225,6 +226,45 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Mobile Card View (Hidden on Desktop) -->
+            <div class="md:hidden space-y-4">
+                @foreach($users as $user)
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <div class="font-semibold text-gray-900">{{ $user->name }}</div>
+                            <div class="text-xs text-gray-500">{{ $user->email }}</div>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full {{ $user->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                            {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-500 mb-1"><span class="font-medium text-gray-700">Homebase:</span> {{ $user->homebase ?: '-' }}</div>
+                    <div class="text-sm text-gray-500 mb-1"><span class="font-medium text-gray-700">Role:</span> {{ $user->roles->first()->name }}</div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <a href="{{ route('admin.users.edit', $user) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 rounded-md text-xs font-medium hover:bg-blue-100" title="Edit User">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Edit
+                        </a>
+                        <button type="button" @click="$dispatch('open-modal', 'reset-password-{{$user->id}}')" class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-600 rounded-md text-xs font-medium hover:bg-yellow-100" title="Reset Password">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                            Reset Password
+                        </button>
+                        @if($user->id !== auth()->id())
+                        <button @click="$dispatch('open-modal', 'toggle-active-{{$user->id}}')" class="inline-flex items-center px-3 py-1.5 bg-orange-50 text-orange-600 rounded-md text-xs font-medium hover:bg-orange-100" title="{{ $user->is_active ? 'Nonaktifkan User' : 'Aktifkan User' }}">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $user->is_active ? 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636' : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' }}"/></svg>
+                            {{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                        </button>
+                        <button @click="$dispatch('open-modal', 'delete-user-{{$user->id}}')" class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-md text-xs font-medium hover:bg-red-100" title="Delete User">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            Hapus
+                        </button>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
             </div>
 
             <!-- Pagination -->
@@ -396,151 +436,217 @@
         </form>
     </x-modal>
 
-    <!-- Reset Password Modals -->
+    <!-- User-specific Modals -->
     @foreach($users as $user)
-    <x-modal name="reset-password-{{$user->id}}" :show="false">
-        <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" class="p-6">
-            @csrf
-            @method('POST')
+        <!-- Reset Password Modal -->
+        <x-modal name="reset-password-{{$user->id}}" :show="session()->has('reset-password-errors-'.$user->id)">
+            <form method="POST" 
+                action="{{ route('admin.users.reset-password', $user) }}" 
+                x-data="{ 
+                    formSubmitted: false,
+                    password: '',
+                    passwordConfirmation: '',
+                    errors: {},
+                    
+                    validateForm() {
+                        this.errors = {};
+                        
+                        if (!this.password) {
+                            this.errors.password = 'Password baru harus diisi';
+                        } else if (this.password.length < 8) {
+                            this.errors.password = 'Password minimal 8 karakter';
+                        }
+                        
+                        if (!this.passwordConfirmation) {
+                            this.errors.passwordConfirmation = 'Konfirmasi password harus diisi';
+                        } else if (this.password !== this.passwordConfirmation) {
+                            this.errors.passwordConfirmation = 'Konfirmasi password tidak sesuai';
+                        }
+                        
+                        return Object.keys(this.errors).length === 0;
+                    },
+                    
+                    submitForm(e) {
+                        e.preventDefault();
+                        if (this.formSubmitted) return;
+                        
+                        if (this.validateForm()) {
+                            this.formSubmitted = true;
+                            this.$refs.resetPasswordForm.submit();
+                        }
+                    }
+                }"
+                x-ref="resetPasswordForm"
+                class="p-6">
+                @csrf
+                @method('POST')
 
-            <h2 class="text-lg font-medium text-gray-900">
-                Reset Password User
-            </h2>
+                <h2 class="text-lg font-medium text-gray-900">
+                    Reset Password User
+                </h2>
 
-            <div class="mt-2 text-sm text-gray-600">
-                <p><strong>Nama:</strong> {{ $user->name }}</p>
-                <p><strong>Email:</strong> {{ $user->email }}</p>
-            </div>
-
-            <!-- New Password -->
-            <div class="mt-4">
-                <x-input-label for="new_password_{{$user->id}}" value="Password Baru" />
-                <x-text-input id="new_password_{{$user->id}}" 
-                    name="new_password" 
-                    type="password" 
-                    class="mt-1 block w-full" 
-                    required />
-                <x-input-error :messages="$errors->get('new_password')" class="mt-2" />
-            </div>
-
-            <!-- Confirm Password -->
-            <div class="mt-4">
-                <x-input-label for="new_password_confirmation_{{$user->id}}" value="Konfirmasi Password Baru" />
-                <x-text-input id="new_password_confirmation_{{$user->id}}" 
-                    name="new_password_confirmation" 
-                    type="password" 
-                    class="mt-1 block w-full" 
-                    required />
-            </div>
-
-            <p class="mt-4 text-sm text-gray-500">
-                Password baru akan langsung aktif setelah disimpan. User perlu menggunakan password baru untuk login berikutnya.
-            </p>
-
-            <div class="mt-6 flex justify-end">
-                <x-secondary-button x-on:click="$dispatch('close')">
-                    Batal
-                </x-secondary-button>
-
-                <x-primary-button class="ml-3">
-                    Reset Password
-                </x-primary-button>
-            </div>
-        </form>
-    </x-modal>
-
-    <!-- Toggle Active Modal -->
-    <x-modal name="toggle-active-{{$user->id}}" focusable>
-        <form method="POST" action="{{ route('admin.users.toggle-active', $user) }}" class="p-6">
-            @csrf
-            @method('PUT')
-            
-            <h2 class="text-lg font-medium text-gray-900">
-                {{ $user->is_active ? 'Nonaktifkan User' : 'Aktifkan User' }}
-            </h2>
-
-            <div class="mt-2 text-sm text-gray-600">
-                <p><strong>Nama:</strong> {{ $user->name }}</p>
-                <p><strong>Email:</strong> {{ $user->email }}</p>
-            </div>
-
-            @if(!$user->is_active)
-                <p class="mt-4 text-sm text-gray-600">
-                    Apakah Anda yakin ingin mengaktifkan kembali akun user ini?
-                </p>
-            @else
-                <div class="mt-4">
-                    <x-input-label for="reason" value="Alasan penonaktifan" />
-                    <x-text-input id="reason" name="reason" type="text" class="mt-1 block w-full" required />
-                    <p class="mt-2 text-sm text-red-500">
-                        Perhatian: User yang dinonaktifkan tidak akan dapat mengakses sistem. 
-                        Semua data dan laporan tetap tersimpan namun tidak dapat diakses sampai akun diaktifkan kembali.
-                    </p>
+                <div class="mt-2 text-sm text-gray-600">
+                    <p><strong>Nama:</strong> {{ $user->name }}</p>
+                    <p><strong>Email:</strong> {{ $user->email }}</p>
                 </div>
-            @endif
 
-            <div class="mt-6 flex justify-end">
-                <x-secondary-button x-on:click="$dispatch('close')">
-                    Batal
-                </x-secondary-button>
+                @if(session()->has('reset-password-errors-'.$user->id))
+                    <div class="mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">
+                                    Terdapat beberapa kesalahan:
+                                </h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <ul class="list-disc list-inside">
+                                        @foreach(session('reset-password-errors-'.$user->id) as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
-                <x-primary-button class="ml-3">
+                <!-- New Password -->
+                <div class="mt-4">
+                    <x-input-label for="new_password_{{$user->id}}" value="Password Baru" />
+                    <x-text-input id="new_password_{{$user->id}}" 
+                        name="new_password" 
+                        type="password" 
+                        x-model="password"
+                        class="mt-1 block w-full" 
+                        required />
+                    <div x-show="errors.password" x-text="errors.password" class="mt-2 text-sm text-red-600"></div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mt-4">
+                    <x-input-label for="new_password_confirmation_{{$user->id}}" value="Konfirmasi Password Baru" />
+                    <x-text-input id="new_password_confirmation_{{$user->id}}" 
+                        name="new_password_confirmation" 
+                        type="password" 
+                        x-model="passwordConfirmation"
+                        class="mt-1 block w-full" 
+                        required />
+                    <div x-show="errors.passwordConfirmation" x-text="errors.passwordConfirmation" class="mt-2 text-sm text-red-600"></div>
+                </div>
+
+                <p class="mt-4 text-sm text-gray-500">
+                    Password baru akan langsung aktif setelah disimpan. User perlu menggunakan password baru untuk login berikutnya.
+                </p>
+
+                <div class="mt-6 flex justify-end">
+                    <x-secondary-button x-on:click="$dispatch('close')">
+                        Batal
+                    </x-secondary-button>
+
+                    <x-primary-button class="ml-3" @click="submitForm($event)">
+                        Reset Password
+                    </x-primary-button>
+                </div>
+            </form>
+        </x-modal>
+
+        <!-- Toggle Active Modal -->
+        <x-modal name="toggle-active-{{$user->id}}" focusable>
+            <form method="POST" action="{{ route('admin.users.toggle-active', $user) }}" class="p-6">
+                @csrf
+                @method('PUT')
+                
+                <h2 class="text-lg font-medium text-gray-900">
                     {{ $user->is_active ? 'Nonaktifkan User' : 'Aktifkan User' }}
-                </x-primary-button>
-            </div>
-        </form>
-    </x-modal>
+                </h2>
 
-    <!-- Delete Confirmation Modal -->
-    <x-modal name="delete-user-{{$user->id}}" focusable>
-        <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="p-6">
-            @csrf
-            @method('DELETE')
-            
-            <h2 class="text-lg font-medium text-gray-900">
-                Hapus Akun User
-            </h2>
+                <div class="mt-2 text-sm text-gray-600">
+                    <p><strong>Nama:</strong> {{ $user->name }}</p>
+                    <p><strong>Email:</strong> {{ $user->email }}</p>
+                </div>
 
-            <div class="mt-2 text-sm text-gray-600">
-                <p><strong>Nama:</strong> {{ $user->name }}</p>
-                <p><strong>Email:</strong> {{ $user->email }}</p>
-            </div>
+                @if(!$user->is_active)
+                    <p class="mt-4 text-sm text-gray-600">
+                        Apakah Anda yakin ingin mengaktifkan kembali akun user ini?
+                    </p>
+                @else
+                    <div class="mt-4">
+                        <x-input-label for="reason" value="Alasan penonaktifan" />
+                        <x-text-input id="reason" name="reason" type="text" class="mt-1 block w-full" required />
+                        <p class="mt-2 text-sm text-red-500">
+                            Perhatian: User yang dinonaktifkan tidak akan dapat mengakses sistem. 
+                            Semua data dan laporan tetap tersimpan namun tidak dapat diakses sampai akun diaktifkan kembali.
+                        </p>
+                    </div>
+                @endif
 
-            <p class="mt-4 text-sm text-red-600 font-medium">
-                Peringatan: Tindakan ini tidak dapat dibatalkan!
-            </p>
+                <div class="mt-6 flex justify-end">
+                    <x-secondary-button x-on:click="$dispatch('close')">
+                        Batal
+                    </x-secondary-button>
 
-            <p class="mt-2 text-sm text-gray-600">
-                Semua data berikut akan dihapus secara permanen:
-            </p>
+                    <x-primary-button class="ml-3">
+                        {{ $user->is_active ? 'Nonaktifkan User' : 'Aktifkan User' }}
+                    </x-primary-button>
+                </div>
+            </form>
+        </x-modal>
 
-            <ul class="list-disc ml-4 mt-2 text-sm text-gray-600">
-                <li>Akun dan profil user</li>
-                <li>Seluruh laporan yang dibuat oleh user</li>
-                <li>File yang diunggah (avatar, tanda tangan)</li>
-            </ul>
+        <!-- Delete Confirmation Modal -->
+        <x-modal name="delete-user-{{$user->id}}" focusable>
+            <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="p-6">
+                @csrf
+                @method('DELETE')
+                
+                <h2 class="text-lg font-medium text-gray-900">
+                    Hapus Akun User
+                </h2>
 
-            <div class="mt-6">
-                <x-input-label for="confirm" value="Ketik DELETE untuk konfirmasi" />
-                <x-text-input 
-                    id="confirm" 
-                    type="text" 
-                    class="mt-1 block w-full"
-                    x-data=""
-                    x-on:input="$el.form.querySelector('button[type=submit]').disabled = $el.value !== 'DELETE'"
-                    required />
-            </div>
+                <div class="mt-2 text-sm text-gray-600">
+                    <p><strong>Nama:</strong> {{ $user->name }}</p>
+                    <p><strong>Email:</strong> {{ $user->email }}</p>
+                </div>
 
-            <div class="mt-6 flex justify-end">
-                <x-secondary-button x-on:click="$dispatch('close')">
-                    Batal
-                </x-secondary-button>
+                <p class="mt-4 text-sm text-red-600 font-medium">
+                    Peringatan: Tindakan ini tidak dapat dibatalkan!
+                </p>
 
-                <x-primary-button class="ml-3 bg-red-600 hover:bg-red-700" disabled>
-                    Hapus User
-                </x-primary-button>
-            </div>
-        </form>
-    </x-modal>
+                <p class="mt-2 text-sm text-gray-600">
+                    Semua data berikut akan dihapus secara permanen:
+                </p>
+
+                <ul class="list-disc ml-4 mt-2 text-sm text-gray-600">
+                    <li>Akun dan profil user</li>
+                    <li>Seluruh laporan yang dibuat oleh user</li>
+                    <li>File yang diunggah (avatar, tanda tangan)</li>
+                </ul>
+
+                <div class="mt-6">
+                    <x-input-label for="confirm" value="Ketik DELETE untuk konfirmasi" />
+                    <x-text-input 
+                        id="confirm" 
+                        type="text" 
+                        class="mt-1 block w-full"
+                        x-data=""
+                        x-on:input="$el.form.querySelector('button[type=submit]').disabled = $el.value !== 'DELETE'"
+                        required />
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <x-secondary-button x-on:click="$dispatch('close')">
+                        Batal
+                    </x-secondary-button>
+
+                    <x-primary-button class="ml-3 bg-red-600 hover:bg-red-700" disabled>
+                        Hapus User
+                    </x-primary-button>
+                </div>
+            </form>
+        </x-modal>
     @endforeach
 </x-app-layout>
