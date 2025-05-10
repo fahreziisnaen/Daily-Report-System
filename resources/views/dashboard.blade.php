@@ -131,24 +131,55 @@
                             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                 <div class="p-6">
                                     <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ $summary->user_name }}</h3>
+                                    
+                                    <!-- Month and Year Selector -->
+                                    <div class="flex items-center justify-between mb-4">
+                                        <form method="GET" action="{{ route('dashboard') }}" class="flex items-center space-x-2">
+                                            <select name="month" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                                @foreach($months as $value => $name)
+                                                    <option value="{{ $value }}" {{ $selectedMonth == $value ? 'selected' : '' }}>
+                                                        {{ $name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <select name="year" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                                @foreach($years as $year)
+                                                    <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
+                                                        {{ $year }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                Lihat
+                                            </button>
+                                        </form>
+                                    </div>
+
                                     <div class="grid grid-cols-7 gap-1">
                                         @php
-                                            $startDate = now()->startOfMonth();
-                                            $endDate = now()->endOfMonth();
+                                            $startDate = $selectedDate->copy()->startOfMonth();
+                                            $endDate = $selectedDate->copy()->endOfMonth();
                                             $reportDates = collect($summary->reports)->pluck('report_date')->map(function($date) {
                                                 return $date->format('Y-m-d');
                                             })->toArray();
+
+                                            // Mengubah urutan hari sesuai standar Indonesia (Senin-Minggu)
+                                            $daysOfWeek = ['S', 'S', 'R', 'K', 'J', 'S', 'M'];
+                                            
+                                            // Hitung offset yang benar
+                                            $firstDayOfWeek = $startDate->dayOfWeek;
+                                            $offset = $firstDayOfWeek == 0 ? 6 : $firstDayOfWeek - 1; // Mengubah Minggu (0) menjadi 6
                                         @endphp
 
                                         <!-- Calendar Header -->
-                                        @foreach(['M', 'S', 'S', 'R', 'K', 'J', 'S'] as $day)
+                                        @foreach($daysOfWeek as $day)
                                             <div class="text-center text-xs font-medium text-gray-500">
                                                 {{ $day }}
                                             </div>
                                         @endforeach
 
                                         <!-- Empty days before start of month -->
-                                        @for($i = 1; $i < $startDate->dayOfWeek; $i++)
+                                        @for($i = 0; $i < $offset; $i++)
                                             <div></div>
                                         @endfor
 

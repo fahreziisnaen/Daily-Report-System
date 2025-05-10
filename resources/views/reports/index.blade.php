@@ -23,9 +23,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Search/Filter Section -->
             <div class="mb-4">
-                <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col sm:flex-row items-end gap-4">
+                <form method="GET" action="{{ route('reports.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                     @if(auth()->user()->isAdmin())
-                    <div class="flex-1">
+                    <div>
                         <x-input-label for="employee_search" :value="__('Nama Karyawan')" class="mb-1" />
                         <div class="relative" x-data="{ 
                             search: '{{ request('employee_search') }}',
@@ -53,9 +53,7 @@
                                 @focus="showDropdown = search.length > 0"
                                 @click.away="showDropdown = false"
                                 placeholder="Cari berdasarkan nama karyawan..." 
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-[38px]">
-                            
-                            <!-- Dropdown -->
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10">
                             <div x-show="showDropdown" 
                                 x-transition
                                 class="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
@@ -63,78 +61,22 @@
                                     <div @click="search = item; showDropdown = false"
                                         x-text="item"
                                         class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                        :class="{'bg-gray-50': search === item}">
-                                    </div>
+                                        :class="{'bg-gray-50': search === item}"></div>
                                 </template>
-                                <div x-show="filteredItems.length === 0" 
-                                    class="px-4 py-2 text-sm text-gray-500">
-                                    Tidak ada hasil yang cocok
-                                </div>
+                                <div x-show="filteredItems.length === 0" class="px-4 py-2 text-sm text-gray-500">Tidak ada hasil yang cocok</div>
                             </div>
                         </div>
                     </div>
                     @endif
 
-                    <!-- Filter tanggal -->
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                        <div class="relative" x-data="{ 
-                            date: '{{ request('report_date', '') }}',
-                            formattedDate: '{{ request('report_date') ? \Carbon\Carbon::parse(request('report_date'))->format('d/m/Y') : '' }}'
-                        }">
-                            <input type="date" 
-                                name="report_date" 
-                                id="report_date"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base date-input h-[38px]" 
-                                x-model="date"
-                                @change="formattedDate = date ? new Date(date).toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'}) : ''"
-                                :data-date="formattedDate || 'Pilih tanggal...'"
-                                placeholder="Pilih tanggal...">
-                            <style>
-                                .date-input::-webkit-calendar-picker-indicator {
-                                    background: transparent;
-                                    bottom: 0;
-                                    color: transparent;
-                                    cursor: pointer;
-                                    height: 100%;
-                                    left: 0;
-                                    position: absolute;
-                                    right: 0;
-                                    top: 0;
-                                    width: auto;
-                                    z-index: 10;
-                                }
-                                .date-input::before {
-                                    content: attr(data-date);
-                                    position: absolute;
-                                    left: 0;
-                                    right: 0;
-                                    top: 50%;
-                                    transform: translateY(-50%);
-                                    padding: 0 0.75rem;
-                                    pointer-events: none;
-                                    z-index: 1;
-                                    color: #6B7280;  /* Default placeholder color */
-                                }
-                                .date-input:not([data-date=""]):before,
-                                .date-input[data-date]:not([data-date="Pilih tanggal..."]):before {
-                                    color: #111827;  /* Text color when date is selected */
-                                }
-                                .date-input {
-                                    color: transparent !important;
-                                    background: white;
-                                    padding: 0.5rem 0.75rem !important;
-                                }
-                                .date-input::placeholder {
-                                    color: #6B7280;
-                                    opacity: 1;
-                                }
-                            </style>
-                        </div>
+                    <div>
+                        <x-input-label for="report_date" :value="__('Tanggal')" class="mb-1" />
+                        <input type="date" name="report_date" id="report_date"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
+                            value="{{ request('report_date') }}">
                     </div>
 
-                    <!-- Filter Lokasi -->
-                    <div class="flex-1">
+                    <div>
                         <x-input-label for="location" :value="__('Lokasi')" class="mb-1" />
                         <div class="relative" x-data="{ 
                             search: '{{ request('location') }}',
@@ -162,9 +104,7 @@
                                 @focus="showDropdown = search.length > 0"
                                 @click.away="showDropdown = false"
                                 placeholder="Cari berdasarkan lokasi..."
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-[38px]">
-                            
-                            <!-- Dropdown -->
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10">
                             <div x-show="showDropdown" 
                                 x-transition
                                 class="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
@@ -172,19 +112,14 @@
                                     <div @click="search = item; showDropdown = false"
                                         x-text="item"
                                         class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                        :class="{'bg-gray-50': search === item}">
-                                    </div>
+                                        :class="{'bg-gray-50': search === item}"></div>
                                 </template>
-                                <div x-show="filteredItems.length === 0" 
-                                    class="px-4 py-2 text-sm text-gray-500">
-                                    Tidak ada hasil yang cocok
-                                </div>
+                                <div x-show="filteredItems.length === 0" class="px-4 py-2 text-sm text-gray-500">Tidak ada hasil yang cocok</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Filter Project -->
-                    <div class="flex-1">
+                    <div>
                         <x-input-label for="project_code" :value="__('Project')" class="mb-1" />
                         <div class="relative" x-data="{ 
                             search: '{{ request('project_code') }}',
@@ -212,9 +147,7 @@
                                 @focus="showDropdown = search.length > 0"
                                 @click.away="showDropdown = false"
                                 placeholder="Cari berdasarkan kode project..."
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-[38px]">
-                            
-                            <!-- Dropdown -->
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10">
                             <div x-show="showDropdown" 
                                 x-transition
                                 class="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
@@ -222,27 +155,17 @@
                                     <div @click="search = item; showDropdown = false"
                                         x-text="item"
                                         class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                        :class="{'bg-gray-50': search === item}">
-                                    </div>
+                                        :class="{'bg-gray-50': search === item}"></div>
                                 </template>
-                                <div x-show="filteredItems.length === 0" 
-                                    class="px-4 py-2 text-sm text-gray-500">
-                                    Tidak ada hasil yang cocok
-                                </div>
+                                <div x-show="filteredItems.length === 0" class="px-4 py-2 text-sm text-gray-500">Tidak ada hasil yang cocok</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex gap-2 items-stretch h-[38px]">
-                        <button type="submit" 
-                            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200 flex items-center justify-center min-w-[80px]">
-                            <span>Cari</span>
-                        </button>
+                    <div class="flex gap-2">
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 h-10">Cari</button>
                         @if(request()->hasAny(['employee_search', 'report_date', 'location', 'project_code']))
-                            <a href="{{ route('reports.index') }}" 
-                                class="px-4 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors duration-200 flex items-center justify-center min-w-[80px] border border-red-200">
-                                <span>Reset</span>
-                            </a>
+                        <a href="{{ route('reports.index') }}" class="px-4 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 h-10 border border-red-200">Reset</a>
                         @endif
                     </div>
                 </form>
