@@ -21,8 +21,8 @@
                         </header>
 
                         <div class="mt-4">
-                            <img src="{{ auth()->user()->avatar_url }}" 
-                                alt="{{ auth()->user()->name }}" 
+                            <img src="{{ $user->avatar_url }}" 
+                                alt="{{ $user->name }}" 
                                 class="w-32 h-32 rounded-full object-cover mb-4">
                         </div>
                     </section>
@@ -39,8 +39,8 @@
                         </header>
 
                         <div class="mt-4">
-                            @if(auth()->user()->signature_url)
-                                <img src="{{ auth()->user()->signature_url }}" 
+                            @if($user->signature_url)
+                                <img src="{{ $user->signature_url }}" 
                                     alt="Signature" 
                                     class="max-w-[200px] mb-4">
                             @endif
